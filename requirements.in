@@ -1,0 +1,8 @@
+django
+django-govuk-template
+django-govuk-template[forms]
+jira
+libsass
+
+#-e git+https://github.com/uktrade/django-authbroker-client#egg=authbroker_client
+raven
