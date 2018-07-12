@@ -11,19 +11,25 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 """
 
 import os
+import environ
+env = environ.Env(
+    # set casting, default value
+    DEBUG=(bool, False)
+)
+
+environ.Env.read_env()
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '51abebb#k%0pv(#3qd)3=f+5qbsjco7pnz2&0oe1+j*ykfg9qx'
+SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env('DEBUG')
 
 ALLOWED_HOSTS = []
 
@@ -126,7 +132,9 @@ GOVUK_SERVICE_SETTINGS = {
     'name': 'DIT Content change request form',
     'phase': 'beta',
     'header_link_view_name': 'home',
-    # 'header_links': [
-    #     {'name': 'Home', 'link': 'service_app:home', 'link_is_view_name': True},
-    # ],
 }
+
+JIRA_URL = env('JIRA_URL')
+JIRA_USERNAME = env('JIRA_USERNAME')
+JIRA_PASSWORD = env('JIRA_PASSWORD')
+JIRA_PROJECT_ID = env('JIRA_PROJECT_ID')

@@ -1,8 +1,9 @@
 django
 django-govuk-template
 django-govuk-template[forms]
+django-environ
 jira
 libsass
+raven
 
 #-e git+https://github.com/uktrade/django-authbroker-client#egg=authbroker_client
-raven

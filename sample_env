@@ -1,0 +1,5 @@
+SECRET_KEY = a-secret-key
+JIRA_URL = https://test.atlassian.net
+JIRA_USERNAME = a-jira-username
+JIRA_PASSWORD = a-jira-password
+JIRA_PROJECT_ID = 9999

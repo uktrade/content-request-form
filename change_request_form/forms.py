@@ -52,7 +52,6 @@ class ChangeRequestForm(GOVUKForm):
         help_text='Please outline your request, intended audience and it\'s purpose '
                   '(for example, to sell, to inform, to explain). For updating existing '
                   'content, please provide a specific URL to help save time.'
-
     )
 
     date = forms.DateField(
