@@ -16,9 +16,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-from change_request_form.views import ChangeRequestFormView
+from change_request_form.views import ChangeRequestFormView, ChangeRequestFormSuccessView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', ChangeRequestFormView.as_view(), name='home'),
+    path('success/', ChangeRequestFormSuccessView.as_view(), name='success'),
+
 ]

@@ -1,5 +1,9 @@
-SECRET_KEY = a-secret-key
-JIRA_URL = https://test.atlassian.net
-JIRA_USERNAME = a-jira-username
-JIRA_PASSWORD = a-jira-password
-JIRA_PROJECT_ID = 9999
+DEBUG=on
+SECRET_KEY=a-secret-key
+JIRA_URL=https://test.atlassian.net
+JIRA_USERNAME=a-jira-username
+JIRA_PASSWORD=a-jira-password
+JIRA_PROJECT_ID=9999
+AV_URL=https://clamav-url/
+AV_USERNAME=clamav-username
+AV_PASSWORD=clamav-password
