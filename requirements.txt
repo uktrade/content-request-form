@@ -20,6 +20,6 @@ pytz==2018.5              # via django
 raven==6.9.0
 requests-oauthlib==1.0.0  # via jira
 requests-toolbelt==0.8.0  # via jira
-requests==2.19.1          # via jira, requests-oauthlib, requests-toolbelt
+requests==2.19.1
 six==1.11.0               # via jira, libsass
 urllib3==1.23             # via requests

@@ -1,0 +1,8 @@
+-r requirements.txt
+
+pytest
+pytest-django
+pytest-sugar
+pytest-mock
+pytest-env
+pytest-cov
