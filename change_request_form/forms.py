@@ -72,7 +72,7 @@ class ChangeRequestForm(GOVUKForm):
 
     description = forms.CharField(
         label='What is your content request? Please give as much detail as possible.',
-        widget=widgets.TextArea(),
+        widget=widgets.Textarea(),
         help_text='Please outline your request, intended audience and it\'s purpose '
                   '(for example, to sell, to inform, to explain). For updating existing '
                   'content, please provide a specific URL to help save time.'

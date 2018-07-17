@@ -8,5 +8,4 @@ raven
 requests
 requests_oauthlib
 
-gunicorn
-whitenoise
+raven

@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 
 import os
 import environ
+import raven
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -45,6 +46,7 @@ INSTALLED_APPS = [
     'govuk_template',
     'govuk_forms',
     'change_request_form',
+    'raven.contrib.django.raven_compat',
 ]
 
 MIDDLEWARE = [
@@ -133,6 +135,12 @@ GOVUK_SERVICE_SETTINGS = {
     'header_link_view_name': 'home',
 }
 
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+RAVEN_CONFIG = {
+    'dsn': env('SENTRY_DSN')
+}
+
 # Jira config
 JIRA_URL = env('JIRA_URL')
 JIRA_USERNAME = env('JIRA_USERNAME')
@@ -150,4 +158,3 @@ AUTHBROKER_CLIENT_ID = env('AUTHBROKER_CLIENT_ID')
 AUTHBROKER_CLIENT_SECRET = env('AUTHBROKER_CLIENT_SECRET')
 AUTHBROKER_SCOPES='read write'
 
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
