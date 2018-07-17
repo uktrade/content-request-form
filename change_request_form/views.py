@@ -1,10 +1,13 @@
 from django.views.generic.edit import FormView
 from django.views.generic.base import TemplateView
 from django.urls import reverse_lazy
+from django.utils.decorators import method_decorator
 
 from .forms import ChangeRequestForm
+from authbroker_client.client import authbroker_login_required
 
 
+@method_decorator(authbroker_login_required, name="dispatch")
 class ChangeRequestFormView(FormView):
     template_name = 'change_request.html'
     form_class = ChangeRequestForm
@@ -20,6 +23,7 @@ class ChangeRequestFormView(FormView):
         return url + '?issue=' + self.request.JIRA_ticket_id
 
 
+@method_decorator(authbroker_login_required, name="dispatch")
 class ChangeRequestFormSuccessView(TemplateView):
     template_name = 'change_request_success.html'
 

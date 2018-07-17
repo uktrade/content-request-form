@@ -6,5 +6,7 @@ jira
 libsass
 raven
 requests
+requests_oauthlib
 
-#-e git+https://github.com/uktrade/django-authbroker-client#egg=authbroker_client
+gunicorn
+whitenoise

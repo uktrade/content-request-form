@@ -7,3 +7,7 @@ JIRA_PROJECT_ID=9999
 AV_URL=https://clamav-url/
 AV_USERNAME=clamav-username
 AV_PASSWORD=clamav-password
+AUTHBROKER_URL=https://authbroker/
+AUTHBROKER_CLIENT_ID=a-client-id
+AUTHBROKER_CLIENT_SECRET=a-secret-key
+AUTHBROKER_SCOPES='read write'
