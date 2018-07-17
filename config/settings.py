@@ -30,7 +30,7 @@ SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[])
 
 # Application definition
 
@@ -149,3 +149,5 @@ AUTHBROKER_URL = env('AUTHBROKER_URL')
 AUTHBROKER_CLIENT_ID = env('AUTHBROKER_CLIENT_ID')
 AUTHBROKER_CLIENT_SECRET = env('AUTHBROKER_CLIENT_SECRET')
 AUTHBROKER_SCOPES='read write'
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
