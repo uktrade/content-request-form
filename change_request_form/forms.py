@@ -1,9 +1,13 @@
+import json
+import datetime as dt
+
 from django import forms
 from django.conf import settings
 
 from jira import JIRA
 from govuk_forms.forms import GOVUKForm
 from govuk_forms import widgets, fields
+import requests
 
 from .fields import AVFileField
 
@@ -20,11 +24,24 @@ def create_jira_issue(issue_text, attachments):
         'issuetype': {'name': 'Task'},
     }
 
-    new_issue = jira_client.create_issue(fields=issue_dict)
+    issue = jira_client.create_issue(fields=issue_dict)
 
-    # import pdb; pdb.set_trace()
+    for attachment in attachments:
+        jira_client.add_attachment(issue=issue, attachment=attachment, filename=attachment.name)
 
-    return f'{new_issue.key}-{new_issue.id}'
+    return issue.key
+
+
+def slack_notify(message):
+    slack_message = json.dumps(
+        {
+            'text': message,
+            'username': 'contentbot',
+            'mrkdwn': True
+        }
+    ).encode()
+
+    requests.post(settings.SLACK_URL, data=slack_message)
 
 
 REASON_CHOICES = (
@@ -78,7 +95,7 @@ class ChangeRequestForm(GOVUKForm):
                   'content, please provide a specific URL to help save time.'
     )
 
-    date = fields.SplitDateField(
+    due_date = fields.SplitDateField(
         label='When does this need to be published?',
         help_text='For example, Ministerial visit.'
     )
@@ -128,6 +145,12 @@ class ChangeRequestForm(GOVUKForm):
         required=False
     )
 
+    def clean_due_date(self):
+        date = self.cleaned_data['due_date']
+        if date < dt.date.today():
+            raise forms.ValidationError('The date cannot be in the past')
+        return date
+
     def formatted_text(self):
         self.cleaned_data['action'] = " / ".join(self.cleaned_data['action'])
 
@@ -137,11 +160,16 @@ class ChangeRequestForm(GOVUKForm):
                 'Telephone: {telephone}\n'
                 'Action: {action}\n'
                 'Description: {description}\n'
-                'Due date: {date}\n'
+                'Due date: {due_date}\n'
                 'Due date explanation: {date_explanation}'.format(**self.cleaned_data))
 
     def create_jira_issue(self):
         """Returns the Jira issue ID"""
-        attachments = [field for field in self.cleaned_data if field.startswith('attachment')]
 
-        return create_jira_issue(self.formatted_text(), attachments)
+        attachments = [value for field, value in self.cleaned_data.items() if field.startswith('attachment') if value]
+
+        jira_id = create_jira_issue(self.formatted_text(), attachments)
+
+        slack_notify(f'new content request: jira ref *{jira_id}*')
+
+        return jira_id

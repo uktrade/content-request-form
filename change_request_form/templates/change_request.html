@@ -3,7 +3,7 @@
 {% block inner_content %}
     <h1 class="heading-large">Request a content update to GOV.UK or Great.gov</h1>
     <p>For any requests to upload new or change existing content, you must submit a support ticket for the content team. This will ensure the team can effectively process your request.</p>
-    <form method="post" action="{{ request.path }}">
+    <form method="post" action="{{ request.path }}" enctype="multipart/form-data">
         {% csrf_token %}
         {{ form }}
         <input type="submit" class="button" value="Submit request" />
