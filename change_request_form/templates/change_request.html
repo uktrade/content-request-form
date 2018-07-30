@@ -1,7 +1,7 @@
 {% extends 'govuk_template.html' %}
 
 {% block inner_content %}
-    <h1 class="heading-large">Request a content update to GOV.UK or Great.gov</h1>
+    <h1 class="heading-large">Request a content update to GOV.UK or great.gov.uk</h1>
     <p>For any requests to upload new or change existing content, you must submit a support ticket for the content team. This will ensure the team can effectively process your request.</p>
     <form method="post" action="{{ request.path }}" enctype="multipart/form-data">
         {% csrf_token %}

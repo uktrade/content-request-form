@@ -60,10 +60,10 @@ class ChangeRequestForm(GOVUKForm):
     )
 
     department = forms.CharField(
-        label='Your department',
+        label='Your directorate/section',
         max_length=255,
         widget=widgets.TextInput(),
-        help_text='Your content must have approval from your department before submitting for upload.'
+        help_text='Your content must have approval from your team leader before submitting for upload.'
     )
 
     email = forms.EmailField(
@@ -90,58 +90,59 @@ class ChangeRequestForm(GOVUKForm):
     description = forms.CharField(
         label='What is your content request? Please give as much detail as possible.',
         widget=widgets.Textarea(),
-        help_text='Please outline your request, intended audience and it\'s purpose '
-                  '(for example, to sell, to inform, to explain). For updating existing '
-                  'content, please provide a specific URL to help save time.'
+        help_text='Please outline your request, intended audience and its purpose '
+                  '(for example, to sell, to inform, to explain). '
+                  'For updating/deleting existing content, please provide URL.'
     )
 
     due_date = fields.SplitDateField(
-        label='When does this need to be published?',
-        help_text='For example, Ministerial visit.'
+        label='Do you have a publication deadline?',
+        help_text='If so, give date and reason.',
+        required=False
     )
 
     date_explanation = forms.CharField(
-        label='Please give us a reason for this timeframe',
-        widget=widgets.Textarea()
+        label='Reason',
+        widget=widgets.TextInput()
     )
 
     attachment1 = AVFileField(
-        label='Please attach supporting Word documents detailing your updates',
+        label='Please attach the files containing the content you want to be uploaded',
         max_length=255,
         widget=widgets.ClearableFileInput(),
-        help_text='We accept Word documents with track changes - providing this will make the process very quick.',
+        help_text='We accept Word documents with tracked changes - providing this will make the process very quick.',
         required=False
     )
 
     attachment2 = AVFileField(
-        label='Please attach supporting Word documents detailing your updates',
+        label='',
         max_length=255,
         widget=widgets.ClearableFileInput(),
-        help_text='We accept Word documents with track changes - providing this will make the process very quick.',
+        help_text='',
         required=False
     )
 
     attachment3 = AVFileField(
-        label='Please attach supporting Word documents detailing your updates',
+        label='',
         max_length=255,
         widget=widgets.ClearableFileInput(),
-        help_text='We accept Word documents with track changes - providing this will make the process very quick.',
+        help_text='',
         required=False
     )
 
     attachment4 = AVFileField(
-        label='Please attach supporting Word documents detailing your updates',
+        label='',
         max_length=255,
         widget=widgets.ClearableFileInput(),
-        help_text='We accept Word documents with track changes - providing this will make the process very quick.',
+        help_text='',
         required=False
     )
 
     attachment5 = AVFileField(
-        label='Please attach supporting Word documents detailing your updates',
+        label='',
         max_length=255,
         widget=widgets.ClearableFileInput(),
-        help_text='We accept Word documents with track changes - providing this will make the process very quick.',
+        help_text='',
         required=False
     )
 

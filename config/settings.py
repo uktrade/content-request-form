@@ -130,7 +130,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 GOVUK_SERVICE_SETTINGS = {
-    'name': 'DIT Content change request form',
+    'name': 'DIT Content request form',
     'phase': 'beta',
     'header_link_view_name': 'home',
 }
