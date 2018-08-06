@@ -22,6 +22,7 @@ def create_jira_issue(issue_text, attachments):
         'summary': 'New change request',
         'description': issue_text,
         'issuetype': {'name': 'Task'},
+        'priority': {'name': 'Medium'}
     }
 
     issue = jira_client.create_issue(fields=issue_dict)
@@ -103,7 +104,8 @@ class ChangeRequestForm(GOVUKForm):
 
     date_explanation = forms.CharField(
         label='Reason',
-        widget=widgets.TextInput()
+        widget=widgets.TextInput(),
+        required=False
     )
 
     attachment1 = AVFileField(
@@ -171,6 +173,8 @@ class ChangeRequestForm(GOVUKForm):
 
         jira_id = create_jira_issue(self.formatted_text(), attachments)
 
-        slack_notify(f'new content request: jira ref *{jira_id}*')
+        jira_url = settings.JIRA_ISSUE_URL.format(jira_id)
+
+        slack_notify(f'new content request: {jira_url}')
 
         return jira_id

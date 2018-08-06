@@ -24,7 +24,7 @@ virtualenv --python=python3 env
 
 3. Install pip-tools: `pip install pip-tools`
 
-4. Install dependencies with pip-sync: `pip-sync requirements-dev.txt`
+4. Install dependencies with pip-sync: `pip-sync requirements.txt`
 
 5. Copy sample_env to .env
 
@@ -34,4 +34,4 @@ virtualenv --python=python3 env
 
 ## Running the tests
 
-From the project's root directory run `pytest`
+From the project's root directory run `./manage.py test`

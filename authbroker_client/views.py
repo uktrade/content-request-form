@@ -3,6 +3,7 @@ from django.shortcuts import redirect
 from django.http import HttpResponseBadRequest, HttpResponseServerError
 from django.conf import settings
 
+from raven.contrib.django.raven_compat.models import client
 from .client import get_client, AUTHORISATION_URL, TOKEN_URL, TOKEN_SESSION_KEY
 
 
@@ -31,14 +32,24 @@ class AuthCallbackView(View):
         if not state:
             return HttpResponseServerError()
 
-        token = get_client(self.request).fetch_token(
-            TOKEN_URL,
-            client_secret=settings.AUTHBROKER_CLIENT_SECRET,
-            code=auth_code)
+        try:
+            token = get_client(self.request).fetch_token(
+                TOKEN_URL,
+                client_secret=settings.AUTHBROKER_CLIENT_SECRET,
+                code=auth_code)
 
-        self.request.session[TOKEN_SESSION_KEY] = dict(token)
+            self.request.session[TOKEN_SESSION_KEY] = dict(token)
 
-        del self.request.session[TOKEN_SESSION_KEY + '_oauth_state']
+            del self.request.session[TOKEN_SESSION_KEY + '_oauth_state']
+
+        # NOTE: the BaseException will be removed or narrowed at a later date. The try/except block is
+        # here due to reports of the app raising a 500 if the url is copied.  My current theory is that
+        # somehow the url with the authcode is being copied, which would cause `fetch_token` to raise
+        # an exception. However, looking at the fetch_code method, I'm not entirely sure what exceptions it
+        # would raise in this instance.
+        except BaseException:
+            client.captureException()
+            return redirect('authbroker_login')
 
         # TODO: make the redirect url configurable
         return redirect('/')
