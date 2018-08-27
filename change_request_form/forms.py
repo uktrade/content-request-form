@@ -12,7 +12,7 @@ import requests
 from .fields import AVFileField
 
 
-def create_jira_issue(issue_text, attachments):
+def create_jira_issue(issue_text, attachments, due_date):
     jira_client = JIRA(
         settings.JIRA_URL,
         basic_auth=(settings.JIRA_USERNAME, settings.JIRA_PASSWORD))
@@ -22,13 +22,17 @@ def create_jira_issue(issue_text, attachments):
         'summary': 'New change request',
         'description': issue_text,
         'issuetype': {'name': 'Task'},
-        'priority': {'name': 'Medium'}
+        'priority': {'name': 'Medium'},
+        # 'duedate': due_date,
     }
 
     issue = jira_client.create_issue(fields=issue_dict)
 
     for attachment in attachments:
         jira_client.add_attachment(issue=issue, attachment=attachment, filename=attachment.name)
+
+    for watcher_username in settings.JIRA_WATCHERS:
+        jira_client.add_watcher(issue, watcher_username)
 
     return issue.key
 
@@ -83,9 +87,7 @@ class ChangeRequestForm(GOVUKForm):
         label='Do you want to add, update or remove content?',
         choices=REASON_CHOICES,
         widget=widgets.CheckboxSelectMultiple(),
-        help_text='For GOV.UK updates to existing content - please allow 1 working day. '
-                  'For NEW content on GOV.UK and Great.gov, please allow a minimum of 3 '
-                  'working days to allow for feedback, approvals and upload.'
+        help_text='Please allow a minimum of 3 working days to allow for feedback, approval and upload.'
     )
 
     description = forms.CharField(
@@ -171,7 +173,7 @@ class ChangeRequestForm(GOVUKForm):
 
         attachments = [value for field, value in self.cleaned_data.items() if field.startswith('attachment') if value]
 
-        jira_id = create_jira_issue(self.formatted_text(), attachments)
+        jira_id = create_jira_issue(self.formatted_text(), attachments, str(self.cleaned_data['due_date']))
 
         jira_url = settings.JIRA_ISSUE_URL.format(jira_id)
 
