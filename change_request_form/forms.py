@@ -3,6 +3,8 @@ import datetime as dt
 
 from django import forms
 from django.conf import settings
+from zenpy import Zenpy
+from zenpy.lib.api_objects import Ticket, CustomField, Comment
 
 from jira import JIRA
 from govuk_forms.forms import GOVUKForm
@@ -23,7 +25,7 @@ def create_jira_issue(issue_text, attachments, due_date):
         'description': issue_text,
         'issuetype': {'name': 'Task'},
         'priority': {'name': 'Medium'},
-        # 'duedate': due_date,
+        'duedate': due_date,
     }
 
     issue = jira_client.create_issue(fields=issue_dict)
@@ -180,3 +182,44 @@ class ChangeRequestForm(GOVUKForm):
         slack_notify(f'new content request: {jira_url}')
 
         return jira_id
+
+    def create_zendesk_ticket(self):
+        zenpy_client = Zenpy(
+            subdomain=settings.ZENDESK_SUBDOMAIN,
+            email=settings.ZENDESK_EMAIL,
+            token=settings.ZENDESK_TOKEN,
+        )
+
+        custom_fields = {
+            CustomField(id=30041969, value='Content Delivery'),                         # service
+            CustomField(id=360000180437, value=self.cleaned_data['department']),        # directorate
+            CustomField(id=45522485, value=self.cleaned_data['email']),                 # email
+            CustomField(id=360000188178, value=self.cleaned_data['telephone']),         # Phone number
+            CustomField(id=360000182638, value=self.cleaned_data['action']),            # Content request
+            CustomField(id=360000180457, value=str(self.cleaned_data['due_date'])),     # due date
+            CustomField(id=360000180477, value=self.cleaned_data['date_explanation']),  # reason
+        }
+
+        ticket = zenpy_client.tickets.create(Ticket(
+            subject='Content change request',
+            description=self.formatted_text(),
+            custom_fields=custom_fields,
+            tags=['content delivery']
+        )).ticket
+
+        attachments = [value for field, value in self.cleaned_data.items() if field.startswith('attachment') and value]
+
+        if attachments:
+            uploads = []
+            for attachment in attachments:
+                upload_instance = zenpy_client.attachments.upload(attachment.temporary_file_path())
+                uploads.append(upload_instance.token)
+
+            ticket.comment = Comment(body=str(attachment), uploads=uploads)
+
+            zenpy_client.tickets.update(ticket)
+
+        slack_notify(f'new content request: {ticket.id}')
+
+        return ticket.id
+

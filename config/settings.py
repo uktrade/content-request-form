@@ -127,6 +127,10 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
+FILE_UPLOAD_HANDLERS = [
+    'django.core.files.uploadhandler.TemporaryFileUploadHandler'
+]
+
 STATIC_URL = '/static/'
 
 GOVUK_SERVICE_SETTINGS = {
@@ -163,3 +167,7 @@ AUTHBROKER_SCOPES = 'read write'
 SLACK_URL = env('SLACK_URL')
 
 TEST_RUNNER = 'core.test_runner.DatabaselessTestRunner'
+
+ZENDESK_EMAIL = env('ZENDESK_EMAIL')
+ZENDESK_SUBDOMAIN = env('ZENDESK_SUBDOMAIN')
+ZENDESK_TOKEN = env('ZENDESK_TOKEN')
