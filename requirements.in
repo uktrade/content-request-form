@@ -7,5 +7,6 @@ libsass
 raven
 requests
 requests_oauthlib
+zenpy
 
 raven

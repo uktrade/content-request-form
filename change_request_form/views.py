@@ -14,13 +14,13 @@ class ChangeRequestFormView(FormView):
     success_url = reverse_lazy('success')
 
     def form_valid(self, form):
-        self.request.JIRA_ticket_id = form.create_jira_issue()
+        self.request._ticket_id = form.create_zendesk_ticket()
         return super().form_valid(form)
 
     def get_success_url(self):
         url = super().get_success_url()
 
-        return url + '?issue=' + self.request.JIRA_ticket_id
+        return f'{url}?issue={self.request._ticket_id}'
 
 
 @method_decorator(authbroker_login_required, name="dispatch")

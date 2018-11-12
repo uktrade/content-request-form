@@ -4,6 +4,7 @@
 #
 #    pip-compile --output-file requirements.txt requirements.in
 #
+cachetools==2.1.0         # via zenpy
 certifi==2018.4.16        # via requests
 chardet==3.0.4            # via requests
 defusedxml==0.5.0         # via jira
@@ -11,15 +12,18 @@ django-environ==0.4.5
 django-govuk-forms==0.6   # via django-govuk-template
 django-govuk-template[forms]==0.7
 django==2.0.7
+future==0.16.0            # via zenpy
 idna==2.7                 # via requests
 jira==1.0.15
 libsass==0.14.5
 oauthlib==2.1.0           # via requests-oauthlib
 pbr==4.1.0                # via jira
-pytz==2018.5              # via django
+python-dateutil==2.7.3    # via zenpy
+pytz==2018.5              # via django, zenpy
 raven==6.9.0
 requests-oauthlib==1.0.0
 requests-toolbelt==0.8.0  # via jira
 requests==2.19.1
-six==1.11.0               # via jira, libsass
+six==1.11.0               # via jira, libsass, python-dateutil
 urllib3==1.23             # via requests
+zenpy==2.0.7
