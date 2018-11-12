@@ -15,6 +15,7 @@ from .fields import AVFileField
 
 
 def create_jira_issue(issue_text, attachments, due_date):
+    import pdb; pdb.set_trace()
     jira_client = JIRA(
         settings.JIRA_URL,
         basic_auth=(settings.JIRA_USERNAME, settings.JIRA_PASSWORD))
@@ -103,7 +104,9 @@ class ChangeRequestForm(GOVUKForm):
     due_date = fields.SplitDateField(
         label='Do you have a publication deadline?',
         help_text='If so, give date and reason.',
-        required=False
+        required=False,
+        min_year=dt.date.today().year,
+        max_year=dt.date.today().year + 1,
     )
 
     date_explanation = forms.CharField(
@@ -154,7 +157,7 @@ class ChangeRequestForm(GOVUKForm):
 
     def clean_due_date(self):
         date = self.cleaned_data['due_date']
-        if date < dt.date.today():
+        if date and date < dt.date.today():
             raise forms.ValidationError('The date cannot be in the past')
         return date
 
@@ -222,4 +225,3 @@ class ChangeRequestForm(GOVUKForm):
         slack_notify(f'new content request: {ticket.id}')
 
         return ticket.id
-

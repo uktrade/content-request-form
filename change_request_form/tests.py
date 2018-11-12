@@ -1,7 +1,6 @@
 import datetime as dt
 
 from unittest.mock import patch
-from unittest import skip
 from django.test import TestCase, Client, override_settings
 
 from .forms import ChangeRequestForm
@@ -66,6 +65,21 @@ class ChangeRequestFormTestCase(BaseTestCase):
             form.formatted_text(),
             self.test_formatted_text)
 
+    def test_due_date_is_optional(self):
+        post_data = {k: v for k, v in self.test_post_data.items() if not k.startswith('due_date')}
+        form = ChangeRequestForm(post_data)
+
+        self.assertTrue(form.is_valid())
+
+    def test_no_future_limit_on_date(self):
+        year = dt.date.today().year
+        post_data = self.test_post_data.copy()
+
+        post_data['due_date_2'] = year + 1
+        form = ChangeRequestForm(post_data)
+
+        self.assertTrue(form.is_valid())
+
 
 class ChangeRequestFormViewTestCase(BaseTestCase):
     def setUp(self):
@@ -82,7 +96,6 @@ class ChangeRequestFormViewTestCase(BaseTestCase):
     @patch('authbroker_client.client.has_valid_token')
     @patch('change_request_form.forms.create_jira_issue')
     @patch('change_request_form.forms.slack_notify')
-    @skip()
     @override_settings(JIRA_ISSUE_URL='http://jira_url/?selectedIssue={}')
     def test_successful_submission(self, mock_slack_notify, mock_create_jira_issue, mock_has_valid_token):
         mock_has_valid_token.return_value = True
@@ -96,22 +109,11 @@ class ChangeRequestFormViewTestCase(BaseTestCase):
         mock_slack_notify.call_args.assert_called_with(
             'new content request:http://jira_url/?selectedIssue=FAKE-JIRA-ID')
 
-        self.assertTrue(mock_create_jira_issue.called)
-        mock_create_jira_issue.assert_called_with(self.test_formatted_text, [])
-
-    @override_settings(JIRA_ISSUE_URL='http://jira_url/?selectedIssue={}')
-    def test_successful_submission(self, mock_slack_notify, mock_create_jira_issue, mock_has_valid_token):
-        mock_has_valid_token.return_value = True
-        mock_create_jira_issue.return_value = 'FAKE-JIRA-ID'
-
-        response = self.client.post('/', self.test_post_data)
-
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '/success/?issue=FAKE-JIRA-ID')
-        self.assertTrue(mock_slack_notify.called)
-        mock_slack_notify.call_args.assert_called_with(
-            'new content request:http://jira_url/?selectedIssue=FAKE-JIRA-ID')
+        submitted_date = '{}-{}-{}'.format(
+            self.test_post_data['due_date_2'],
+            self.test_post_data['due_date_1'],
+            self.test_post_data['due_date_0'],
+        )
 
         self.assertTrue(mock_create_jira_issue.called)
-        mock_create_jira_issue.assert_called_with(self.test_formatted_text, [])
-
+        mock_create_jira_issue.assert_called_with(self.test_formatted_text, [], submitted_date)
