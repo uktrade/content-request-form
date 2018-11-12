@@ -15,7 +15,6 @@ from .fields import AVFileField
 
 
 def create_jira_issue(issue_text, attachments, due_date):
-    import pdb; pdb.set_trace()
     jira_client = JIRA(
         settings.JIRA_URL,
         basic_auth=(settings.JIRA_USERNAME, settings.JIRA_PASSWORD))

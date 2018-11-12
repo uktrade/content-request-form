@@ -1,6 +1,6 @@
 django
 django-govuk-template
-django-govuk-template[forms]
+#django-govuk-template[forms]
 django-environ
 jira
 libsass
