@@ -14,7 +14,7 @@ class ChangeRequestFormView(FormView):
     success_url = reverse_lazy('success')
 
     def form_valid(self, form):
-        self.request._ticket_id = form.create_zendesk_ticket()
+        self.request._ticket_id = form.create_jira_issue()
         return super().form_valid(form)
 
     def get_success_url(self):
