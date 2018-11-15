@@ -25,8 +25,10 @@ def create_jira_issue(issue_text, attachments, due_date):
         'description': issue_text,
         'issuetype': {'name': 'Task'},
         'priority': {'name': 'Medium'},
-        'duedate': due_date,
     }
+
+    if due_date:
+        issue_dict['duedate'] = due_date
 
     issue = jira_client.create_issue(fields=issue_dict)
 
