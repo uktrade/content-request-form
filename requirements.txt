@@ -25,4 +25,5 @@ requests-toolbelt==0.8.0  # via jira
 requests==2.19.1
 six==1.11.0               # via jira, libsass, python-dateutil
 urllib3==1.23             # via requests
+whitenoise==4.1.1
 zenpy==2.0.7

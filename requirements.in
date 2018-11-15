@@ -4,9 +4,9 @@ django-govuk-template
 django-environ
 jira
 libsass
-raven
 requests
 requests_oauthlib
 zenpy
+whitenoise
 
 raven

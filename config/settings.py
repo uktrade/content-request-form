@@ -17,7 +17,11 @@ import raven
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+ENV_FILE_PATH = os.path.join(BASE_DIR, '.env')
+
+if os.path.exists(ENV_FILE_PATH):
+    environ.Env.read_env(ENV_FILE_PATH)
+
 env = environ.Env(
     DEBUG=(bool, False)
 )
@@ -51,6 +55,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -132,6 +137,7 @@ FILE_UPLOAD_HANDLERS = [
 ]
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 GOVUK_SERVICE_SETTINGS = {
     'name': 'DIT Content request form',
