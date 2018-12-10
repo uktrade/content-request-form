@@ -102,7 +102,8 @@ class ChangeRequestForm(GOVUKForm):
     action = forms.ChoiceField(
         label='Do you want to add, update or remove content?',
         choices=REASON_CHOICES,
-        help_text='Please allow a minimum of 3 working days to allow for feedback, approval and upload.'
+        help_text='Please allow a minimum of 3 working days to allow for feedback, approval and upload.',
+        widget=widgets.RadioSelect(),
     )
 
     description = forms.CharField(
