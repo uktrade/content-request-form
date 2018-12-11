@@ -14,13 +14,13 @@ import requests
 from .fields import AVFileField
 
 
-def create_jira_issue(issue_text, attachments, due_date):
+def create_jira_issue(project_id, issue_text, attachments, due_date):
     jira_client = JIRA(
         settings.JIRA_URL,
         basic_auth=(settings.JIRA_USERNAME, settings.JIRA_PASSWORD))
 
     issue_dict = {
-        'project': {'id': settings.JIRA_PROJECT_ID},
+        'project': {'id': project_id},
         'summary': 'New change request',
         'description': issue_text,
         'issuetype': {'name': 'Task'},
@@ -54,11 +54,23 @@ def slack_notify(message):
 
 
 REASON_CHOICES = (
-    ('Add new content', 'Add new content'),
-    ('Update existing content on Great.gov', 'Update existing content on Great.gov'),
-    ('Update existing content on GOV.UK', 'Update existing content on GOV.UK'),
-    ('Remove existing content', 'Remove existing content'),
+    ('Add new content to Gov.uk', 'Add new content to Gov.uk'),
+    ('Update or remove content on Gov.uk', 'Update or remove content on Gov.uk'),
+    ('Add new content to Great.gov.uk', 'Add new content to Great.gov.uk'),
+    ('Update or remove content on Great.gov.uk', 'Update or remove content on Great.gov.uk'),
+    ('Add new content to Digital Workspace', 'Add new content to Digital Workspace'),
+    ('Update or remove content on Digital Workspace', 'Update or remove content on Digital Workspace'),
 )
+
+
+REASON_CHOICES_JIRA_PROJECT_MAP = {
+    'Add new content to Gov.uk': settings.JIRA_CONTENT_PROJECT_ID,
+    'Update or remove content on Gov.uk': settings.JIRA_CONTENT_PROJECT_ID,
+    'Add new content to Great.gov.uk': settings.JIRA_CONTENT_PROJECT_ID,
+    'Update or remove content on Great.gov.uk': settings.JIRA_CONTENT_PROJECT_ID,
+    'Add new content to Digital Workspace': settings.JIRA_WORKSPACE_PROJECT_ID,
+    'Update or remove content on Digital Workspace': settings.JIRA_WORKSPACE_PROJECT_ID,
+}
 
 
 class ChangeRequestForm(GOVUKForm):
@@ -87,11 +99,11 @@ class ChangeRequestForm(GOVUKForm):
         help_text='Please provide a direct number in case we need to discuss your request.'
     )
 
-    action = forms.MultipleChoiceField(
+    action = forms.ChoiceField(
         label='Do you want to add, update or remove content?',
         choices=REASON_CHOICES,
-        widget=widgets.CheckboxSelectMultiple(),
-        help_text='Please allow a minimum of 3 working days to allow for feedback, approval and upload.'
+        help_text='Please allow a minimum of 3 working days to allow for feedback, approval and upload.',
+        widget=widgets.RadioSelect(),
     )
 
     description = forms.CharField(
@@ -163,8 +175,6 @@ class ChangeRequestForm(GOVUKForm):
         return date
 
     def formatted_text(self):
-        self.cleaned_data['action'] = " / ".join(self.cleaned_data['action'])
-
         return ('Name: {name}\n'
                 'Department: {department}\n'
                 'Email: {email}\n'
@@ -175,11 +185,13 @@ class ChangeRequestForm(GOVUKForm):
                 'Due date explanation: {date_explanation}'.format(**self.cleaned_data))
 
     def create_jira_issue(self):
-        """Returns the Jira issue ID"""
 
         attachments = [value for field, value in self.cleaned_data.items() if field.startswith('attachment') if value]
 
-        jira_id = create_jira_issue(self.formatted_text(), attachments, str(self.cleaned_data['due_date']))
+        project_id = REASON_CHOICES_JIRA_PROJECT_MAP[self.cleaned_data['action']]
+
+        jira_id = create_jira_issue(
+            project_id, self.formatted_text(), attachments, str(self.cleaned_data['due_date']))
 
         jira_url = settings.JIRA_ISSUE_URL.format(jira_id)
 

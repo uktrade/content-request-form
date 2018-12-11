@@ -1,9 +1,12 @@
 import datetime as dt
 
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 from django.test import TestCase, Client, override_settings
+from django.conf import settings
 
-from .forms import ChangeRequestForm
+from parameterized import parameterized
+
+from .forms import ChangeRequestForm, REASON_CHOICES
 
 
 class BaseTestCase(TestCase):
@@ -14,7 +17,7 @@ class BaseTestCase(TestCase):
             'department': 'test dept',
             'email': 'test@test.com',
             'telephone': '07700 TEST',
-            'action': ['Add new content'],
+            'action': 'Add new content to Gov.uk',
             'description': 'a description',
             'due_date_0': dt.date.today().day,
             'due_date_1': dt.date.today().month,
@@ -24,7 +27,6 @@ class BaseTestCase(TestCase):
 
         test_data = self.test_post_data.copy()
 
-        test_data['action'] = test_data['action'][0]
         test_data['due_date'] = dt.date.today()
 
         self.test_formatted_text = (
@@ -80,6 +82,33 @@ class ChangeRequestFormTestCase(BaseTestCase):
 
         self.assertTrue(form.is_valid())
 
+    @parameterized.expand((action_id,) for action_id, _ in REASON_CHOICES)
+    @patch('change_request_form.forms.create_jira_issue')
+    @patch('change_request_form.forms.slack_notify')
+    def test_jira_project_id(self, action_id, mock_slack_notify, mock_create_jira_issue):
+
+        mock_create_jira_issue.return_value = 'FAKE-JIRA-ID'
+
+        assert settings.JIRA_CONTENT_PROJECT_ID != settings.JIRA_WORKSPACE_PROJECT_ID
+
+        workspace_actions = [
+            'Add new content to Digital Workspace',
+            'Update or remove content on Digital Workspace'
+        ]
+
+        post_data = self.test_post_data.copy()
+        post_data['action'] = action_id
+
+        form = ChangeRequestForm(post_data)
+        self.assertTrue(form.is_valid())
+
+        form.create_jira_issue()
+
+        project_id = settings.JIRA_WORKSPACE_PROJECT_ID if action_id in workspace_actions \
+            else settings.JIRA_CONTENT_PROJECT_ID
+
+        self.assertEquals(mock_create_jira_issue.call_args[0][0], project_id)
+
 
 class ChangeRequestFormViewTestCase(BaseTestCase):
     def setUp(self):
@@ -93,11 +122,12 @@ class ChangeRequestFormViewTestCase(BaseTestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, '/auth/login/')
 
+    @patch('change_request_form.views.get_profile')
     @patch('authbroker_client.client.has_valid_token')
     @patch('change_request_form.forms.create_jira_issue')
     @patch('change_request_form.forms.slack_notify')
     @override_settings(JIRA_ISSUE_URL='http://jira_url/?selectedIssue={}')
-    def test_successful_submission(self, mock_slack_notify, mock_create_jira_issue, mock_has_valid_token):
+    def test_successful_submission(self, mock_slack_notify, mock_create_jira_issue, mock_has_valid_token, mock_get_profile):
         mock_has_valid_token.return_value = True
         mock_create_jira_issue.return_value = 'FAKE-JIRA-ID'
 
@@ -110,10 +140,11 @@ class ChangeRequestFormViewTestCase(BaseTestCase):
             'new content request:http://jira_url/?selectedIssue=FAKE-JIRA-ID')
 
         submitted_date = '{}-{}-{}'.format(
-            self.test_post_data['due_date_2'],
-            self.test_post_data['due_date_1'],
-            self.test_post_data['due_date_0'],
+            str(self.test_post_data['due_date_2']),
+            str(self.test_post_data['due_date_1']).zfill(2),
+            str(self.test_post_data['due_date_0']).zfill(2),
         )
 
         self.assertTrue(mock_create_jira_issue.called)
-        mock_create_jira_issue.assert_called_with(self.test_formatted_text, [], submitted_date)
+        mock_create_jira_issue.assert_called_with(
+            settings.JIRA_CONTENT_PROJECT_ID, self.test_formatted_text, [], submitted_date)
