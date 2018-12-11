@@ -54,10 +54,10 @@ def slack_notify(message):
 
 
 REASON_CHOICES = (
-    ('Add new content', 'Add new content'),
-    ('Update existing content on Great.gov', 'Update existing content on Great.gov'),
-    ('Update existing content on GOV.UK', 'Update existing content on GOV.UK'),
-    ('Remove existing content', 'Remove existing content'),
+    ('Add new content to Gov.uk', 'Add new content to Gov.uk'),
+    ('Update or remove content on Gov.uk', 'Update or remove content on Gov.uk'),
+    ('Add new content to Great.gov.uk', 'Add new content to Great.gov.uk'),
+    ('Update or remove content on Great.gov.uk', 'Update or remove content on Great.gov.uk'),
     ('Add new content to Digital Workspace', 'Add new content to Digital Workspace'),
     ('Update or remove content on Digital Workspace', 'Update or remove content on Digital Workspace'),
 )
