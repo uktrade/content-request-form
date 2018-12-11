@@ -43,6 +43,15 @@ def has_valid_token(request):
     return get_client(request).authorized
 
 
+def get_profile(request):
+    profile = get_client(request).get(PROFILE_URL)
+
+    if profile.status_code != 200:
+        raise Exception('Failed to get user profile - status: {}'.format(profile.status_code))
+
+    return profile.json()
+
+
 def authbroker_login_required(func):
     """Check that the current session has authenticated with the authbroker and has a valid token.
     This is different to the @login_required decorator in that it only checks for a valid authbroker Oauth2 token,

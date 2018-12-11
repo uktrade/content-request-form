@@ -17,7 +17,7 @@ class BaseTestCase(TestCase):
             'department': 'test dept',
             'email': 'test@test.com',
             'telephone': '07700 TEST',
-            'action': 'Add new content',
+            'action': 'Add new content to Gov.uk',
             'description': 'a description',
             'due_date_0': dt.date.today().day,
             'due_date_1': dt.date.today().month,
@@ -122,11 +122,12 @@ class ChangeRequestFormViewTestCase(BaseTestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, '/auth/login/')
 
+    @patch('change_request_form.views.get_profile')
     @patch('authbroker_client.client.has_valid_token')
     @patch('change_request_form.forms.create_jira_issue')
     @patch('change_request_form.forms.slack_notify')
     @override_settings(JIRA_ISSUE_URL='http://jira_url/?selectedIssue={}')
-    def test_successful_submission(self, mock_slack_notify, mock_create_jira_issue, mock_has_valid_token):
+    def test_successful_submission(self, mock_slack_notify, mock_create_jira_issue, mock_has_valid_token, mock_get_profile):
         mock_has_valid_token.return_value = True
         mock_create_jira_issue.return_value = 'FAKE-JIRA-ID'
 

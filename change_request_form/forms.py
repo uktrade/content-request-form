@@ -64,10 +64,10 @@ REASON_CHOICES = (
 
 
 REASON_CHOICES_JIRA_PROJECT_MAP = {
-    'Add new content': settings.JIRA_CONTENT_PROJECT_ID,
-    'Update existing content on Great.gov': settings.JIRA_CONTENT_PROJECT_ID,
-    'Update existing content on GOV.UK': settings.JIRA_CONTENT_PROJECT_ID,
-    'Remove existing content': settings.JIRA_CONTENT_PROJECT_ID,
+    'Add new content to Gov.uk': settings.JIRA_CONTENT_PROJECT_ID,
+    'Update or remove content on Gov.uk': settings.JIRA_CONTENT_PROJECT_ID,
+    'Add new content to Great.gov.uk': settings.JIRA_CONTENT_PROJECT_ID,
+    'Update or remove content on Great.gov.uk': settings.JIRA_CONTENT_PROJECT_ID,
     'Add new content to Digital Workspace': settings.JIRA_WORKSPACE_PROJECT_ID,
     'Update or remove content on Digital Workspace': settings.JIRA_WORKSPACE_PROJECT_ID,
 }

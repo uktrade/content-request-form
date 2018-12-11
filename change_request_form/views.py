@@ -1,10 +1,15 @@
+import logging
+
 from django.views.generic.edit import FormView
 from django.views.generic.base import TemplateView
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 
 from .forms import ChangeRequestForm
-from authbroker_client.client import authbroker_login_required, get_client, PROFILE_URL
+from authbroker_client.client import authbroker_login_required, get_profile
+
+
+logger = logging.getLogger(__file__)
 
 
 @method_decorator(authbroker_login_required, name="dispatch")
@@ -16,10 +21,13 @@ class ChangeRequestFormView(FormView):
     def get_initial(self):
         initial = super().get_initial()
 
-        profile = get_client(self.request).get(PROFILE_URL).json()
+        try:
+            profile = get_profile(self.request)
 
-        initial['email'] = profile['email']
-        initial['name'] = profile['first_name'] + ' ' + profile['last_name']
+            initial['email'] = profile['email']
+            initial['name'] = profile['first_name'] + ' ' + profile['last_name']
+        except Exception:
+            logger.exception('Cannot get user profile')
 
         return initial
 
