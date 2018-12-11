@@ -17,11 +17,23 @@ SCOPE = 'read write'
 
 
 def get_client(request, **kwargs):
+    token_saver = get_token_saver(request)
+
+    token = request.session.get(TOKEN_SESSION_KEY, None)
+
+    refresh_args = {
+        'client_id': settings.AUTHBROKER_CLIENT_ID,
+        'client_secret': settings.AUTHBROKER_CLIENT_SECRET,
+    }
+
     return OAuth2Session(
         settings.AUTHBROKER_CLIENT_ID,
         redirect_uri=request.build_absolute_uri(reverse('authbroker_callback')),
         scope=SCOPE,
-        token=request.session.get(TOKEN_SESSION_KEY, None),
+        token=token,
+        auto_refresh_url=TOKEN_URL,
+        auto_refresh_kwargs=refresh_args,
+        token_updater=token_saver,
         **kwargs)
 
 
@@ -42,3 +54,10 @@ def authbroker_login_required(func):
 
         return func(request)
     return decorated
+
+
+def get_token_saver(request):
+    def token_saver(token):
+        request.session[TOKEN_SESSION_KEY] = token
+
+    return token_saver
