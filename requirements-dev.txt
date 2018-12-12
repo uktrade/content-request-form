@@ -4,6 +4,7 @@
 #
 #    pip-compile --output-file requirements-dev.txt requirements-dev.in
 #
+-e git+https://github.com/lgarvey/django-govuk-forms.git@master#egg=govuk_forms
 cachetools==2.1.0
 certifi==2018.4.16
 chardet==3.0.4
