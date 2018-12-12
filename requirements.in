@@ -1,6 +1,6 @@
 django
 django-govuk-template
-#django-govuk-template[forms]
+-e git+https://github.com/lgarvey/django-govuk-forms.git@master#egg=govuk_forms
 django-environ
 jira
 libsass
