@@ -14,7 +14,7 @@ import requests
 from .fields import AVFileField
 
 
-def create_jira_issue(project_id, issue_text, attachments, due_date):
+def create_jira_issue(project_id, issue_text, attachments, due_date, **extra_fields):
     jira_client = JIRA(
         settings.JIRA_URL,
         basic_auth=(settings.JIRA_USERNAME, settings.JIRA_PASSWORD))
@@ -29,6 +29,9 @@ def create_jira_issue(project_id, issue_text, attachments, due_date):
 
     if due_date:
         issue_dict['duedate'] = due_date
+
+    if extra_fields:
+        issue_dict.update(extra_fields)
 
     issue = jira_client.create_issue(fields=issue_dict)
 
@@ -70,6 +73,14 @@ REASON_CHOICES_JIRA_PROJECT_MAP = {
     'Update or remove content on Great.gov.uk': settings.JIRA_CONTENT_PROJECT_ID,
     'Add new content to Digital Workspace': settings.JIRA_WORKSPACE_PROJECT_ID,
     'Update or remove content on Digital Workspace': settings.JIRA_WORKSPACE_PROJECT_ID,
+}
+
+
+JIRA_FIELD_MAPPING = {
+    'name': 'customfield_11227',
+    'email': 'customfield_11225',
+    'department': 'customfield_11224',
+    'action': {'field': 'customfield_11228', 'type': 'select'}
 }
 
 
@@ -174,6 +185,20 @@ class ChangeRequestForm(GOVUKForm):
             raise forms.ValidationError('The date cannot be in the past')
         return date
 
+    def get_custom_fields(self):
+        mapped = {}
+        for local_field, jira_field in JIRA_FIELD_MAPPING.items():
+            if isinstance(jira_field, dict):
+                # for select items jira requires the field to be in format:
+                # 'field': {'value': the_value}
+                mapped[jira_field['field']] = {
+                    'value': self.cleaned_data[local_field]
+                }
+            else:
+                mapped[jira_field] = self.cleaned_data[local_field]
+
+        return mapped
+
     def formatted_text(self):
         return ('Name: {name}\n'
                 'Department: {department}\n'
@@ -191,7 +216,8 @@ class ChangeRequestForm(GOVUKForm):
         project_id = REASON_CHOICES_JIRA_PROJECT_MAP[self.cleaned_data['action']]
 
         jira_id = create_jira_issue(
-            project_id, self.formatted_text(), attachments, str(self.cleaned_data['due_date']))
+            project_id, self.formatted_text(), attachments, str(self.cleaned_data['due_date']),
+            **self.get_custom_fields())
 
         jira_url = settings.JIRA_ISSUE_URL.format(jira_id)
 
