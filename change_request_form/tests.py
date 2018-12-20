@@ -23,6 +23,7 @@ class BaseTestCase(TestCase):
             'due_date_1': dt.date.today().month,
             'due_date_2': dt.date.today().year,
             'date_explanation': 'ministerial visit',
+            'time_due': 'time due',
         }
 
         test_data = self.test_post_data.copy()
@@ -37,6 +38,7 @@ class BaseTestCase(TestCase):
             'Action: {action}\n'
             'Description: {description}\n'
             'Due date: {due_date}\n'
+            'Time due: {time_due}\n'
             'Due date explanation: {date_explanation}').format(**test_data)
 
 
@@ -147,4 +149,6 @@ class ChangeRequestFormViewTestCase(BaseTestCase):
 
         self.assertTrue(mock_create_jira_issue.called)
         mock_create_jira_issue.assert_called_with(
-            settings.JIRA_CONTENT_PROJECT_ID, self.test_formatted_text, [], submitted_date)
+            settings.JIRA_CONTENT_PROJECT_ID, self.test_formatted_text, [], submitted_date,
+            customfield_11224='test dept', customfield_11225='test@test.com', customfield_11227='Mr Smith',
+            customfield_11228={'value': 'Add new content to Gov.uk'})

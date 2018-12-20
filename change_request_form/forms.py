@@ -133,6 +133,13 @@ class ChangeRequestForm(GOVUKForm):
         max_year=dt.date.today().year + 1,
     )
 
+    time_due= forms.CharField(
+        label='Time due',
+        required=False,
+        max_length=100,
+        widget=widgets.TextInput(),
+    )
+
     date_explanation = forms.CharField(
         label='Reason',
         widget=widgets.TextInput(),
@@ -207,6 +214,7 @@ class ChangeRequestForm(GOVUKForm):
                 'Action: {action}\n'
                 'Description: {description}\n'
                 'Due date: {due_date}\n'
+                'Time due: {time_due}\n'
                 'Due date explanation: {date_explanation}'.format(**self.cleaned_data))
 
     def create_jira_issue(self):
