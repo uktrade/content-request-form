@@ -32,7 +32,7 @@ class ChangeRequestFormView(FormView):
         return initial
 
     def form_valid(self, form):
-        self.request._ticket_id = form.create_jira_issue()
+        self.request._ticket_id = form.create_zendesk_ticket()
         return super().form_valid(form)
 
     def get_success_url(self):
