@@ -57,20 +57,38 @@ def slack_notify(message):
 
 
 REASON_CHOICES = (
-    ('Add new content to Gov.uk', 'Add new content to Gov.uk'),
-    ('Update or remove content on Gov.uk', 'Update or remove content on Gov.uk'),
-    ('Add new content to Great.gov.uk', 'Add new content to Great.gov.uk'),
-    ('Update or remove content on Great.gov.uk', 'Update or remove content on Great.gov.uk'),
+    ('Add new content to GOV.UK', 'Add new content to GOV.UK'),
+    ('Update or remove content on GOV.UK', 'Update or remove content on GOV.UK'),
+    ('Add new content to great.gov.uk', 'Add new content to great.gov.uk'),
+    ('Update or remove content on great.gov.uk', 'Update or remove content on great.gov.uk'),
     ('Add new content to Digital Workspace', 'Add new content to Digital Workspace'),
     ('Update or remove content on Digital Workspace', 'Update or remove content on Digital Workspace'),
 )
 
+REASON_TO_SERVICE_MAP = {
+    'Add new content to GOV.UK': 'GOV.UK',
+    'Update or remove content on GOV.UK': 'GOV.UK',
+    'Add new content to great.gov.uk': 'great.gov.uk',
+    'Update or remove content on great.gov.uk': 'great.gov.uk',
+    'Add new content to Digital Workspace': 'Digital Workspace',
+    'Update or remove content on Digital Workspace': 'Digital Workspace',
+}
+
+ZENDESK_REASON_TO_TAG_MAP = {
+    'Add new content to GOV.UK': '_GOV.UK',
+    'Update or remove content on GOV.UK': '_GOV.UK',
+    'Add new content to great.gov.uk': '_great.gov.uk',
+    'Update or remove content on great.gov.uk': '_great.gov.uk',
+    'Add new content to Digital Workspace': 'Digital Workspace',
+    'Update or remove content on Digital Workspace': 'Digital Workspace',
+}
+
 
 REASON_CHOICES_JIRA_PROJECT_MAP = {
-    'Add new content to Gov.uk': settings.JIRA_CONTENT_PROJECT_ID,
-    'Update or remove content on Gov.uk': settings.JIRA_CONTENT_PROJECT_ID,
-    'Add new content to Great.gov.uk': settings.JIRA_CONTENT_PROJECT_ID,
-    'Update or remove content on Great.gov.uk': settings.JIRA_CONTENT_PROJECT_ID,
+    'Add new content to GOV.UK': settings.JIRA_CONTENT_PROJECT_ID,
+    'Update or remove content on GOV.UK': settings.JIRA_CONTENT_PROJECT_ID,
+    'Add new content to great.gov.uk': settings.JIRA_CONTENT_PROJECT_ID,
+    'Update or remove content on great.gov.uk': settings.JIRA_CONTENT_PROJECT_ID,
     'Add new content to Digital Workspace': settings.JIRA_WORKSPACE_PROJECT_ID,
     'Update or remove content on Digital Workspace': settings.JIRA_WORKSPACE_PROJECT_ID,
 }
@@ -80,7 +98,7 @@ JIRA_FIELD_MAPPING = {
     'name': 'customfield_11227',
     'email': 'customfield_11225',
     'department': 'customfield_11224',
-    'action': {'field': 'customfield_11228', 'type': 'select'}
+    #'action': {'field': 'customfield_11228', 'type': 'select'}
 }
 
 
@@ -128,7 +146,7 @@ class ChangeRequestForm(GOVUKForm):
     due_date = fields.SplitDateField(
         label='Do you have a publication deadline?',
         help_text='If so, give date and reason.',
-        required=False,
+        required=True,
         min_year=dt.date.today().year,
         max_year=dt.date.today().year + 1,
     )
@@ -215,21 +233,15 @@ class ChangeRequestForm(GOVUKForm):
                 'Description: {description}\n'
                 'Due date: {due_date}\n'
                 'Time due: {time_due}\n'
-                'Due date explanation: {date_explanation}'.format(**self.cleaned_data))
+                'Due date explanation: {date_explanation}\n'.format(**self.cleaned_data))
 
-    def create_jira_issue(self):
+    def create_jira_issue(self, extra_content):
 
         attachments = [value for field, value in self.cleaned_data.items() if field.startswith('attachment') if value]
 
-        project_id = REASON_CHOICES_JIRA_PROJECT_MAP[self.cleaned_data['action']]
-
         jira_id = create_jira_issue(
-            project_id, self.formatted_text(), attachments, str(self.cleaned_data['due_date']),
+            settings.JIRA_CONTENT_PROJECT_ID, self.formatted_text() + extra_content, attachments, str(self.cleaned_data['due_date']),
             **self.get_custom_fields())
-
-        jira_url = settings.JIRA_ISSUE_URL.format(jira_id)
-
-        slack_notify(f'new content request: {jira_url}')
 
         return jira_id
 
@@ -240,21 +252,25 @@ class ChangeRequestForm(GOVUKForm):
             token=settings.ZENDESK_TOKEN,
         )
 
-        custom_fields = {
-            CustomField(id=30041969, value='Content Delivery'),                         # service
+        service = REASON_TO_SERVICE_MAP[self.cleaned_data['action']]
+
+        custom_fields = [
+            CustomField(id=30041969, value=service),                                    # service
             CustomField(id=360000180437, value=self.cleaned_data['department']),        # directorate
             CustomField(id=45522485, value=self.cleaned_data['email']),                 # email
             CustomField(id=360000188178, value=self.cleaned_data['telephone']),         # Phone number
             CustomField(id=360000182638, value=self.cleaned_data['action']),            # Content request
-            CustomField(id=360000180457, value=str(self.cleaned_data['due_date'])),     # due date
             CustomField(id=360000180477, value=self.cleaned_data['date_explanation']),  # reason
-        }
+            CustomField(id=360000180457, value=str(self.cleaned_data['due_date']))      # due date
+        ]
+
+        tag = ZENDESK_REASON_TO_TAG_MAP[self.cleaned_data['action']]
 
         ticket = zenpy_client.tickets.create(Ticket(
             subject='Content change request',
             description=self.formatted_text(),
             custom_fields=custom_fields,
-            tags=['content delivery']
+            tags=['content delivery', tag]
         )).ticket
 
         attachments = [value for field, value in self.cleaned_data.items() if field.startswith('attachment') and value]
@@ -268,7 +284,5 @@ class ChangeRequestForm(GOVUKForm):
             ticket.comment = Comment(body=str(attachment), uploads=uploads)
 
             zenpy_client.tickets.update(ticket)
-
-        slack_notify(f'new content request: {ticket.id}')
 
         return ticket.id

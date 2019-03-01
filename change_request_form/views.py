@@ -1,11 +1,12 @@
 import logging
 
+from django.conf import settings
 from django.views.generic.edit import FormView
 from django.views.generic.base import TemplateView
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 
-from .forms import ChangeRequestForm
+from .forms import ChangeRequestForm, slack_notify
 from authbroker_client.client import authbroker_login_required, get_profile
 
 
@@ -32,7 +33,17 @@ class ChangeRequestFormView(FormView):
         return initial
 
     def form_valid(self, form):
-        self.request._ticket_id = form.create_zendesk_ticket()
+
+        zendesk_id = form.create_zendesk_ticket()
+        zendesk_url = settings.ZENDESK_URL.format(zendesk_id)
+
+        jira_id = form.create_jira_issue('Zendesk ticket: {}'.format(zendesk_url))
+        jira_url = settings.JIRA_ISSUE_URL.format(jira_id)
+
+        self.request._ticket_id = zendesk_id
+
+        slack_notify(f'new content request: {jira_url} // {zendesk_url}')
+
         return super().form_valid(form)
 
     def get_success_url(self):
