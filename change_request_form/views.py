@@ -27,7 +27,9 @@ class ChangeRequestFormView(FormView):
 
             initial['email'] = profile['email']
             initial['name'] = profile['first_name'] + ' ' + profile['last_name']
+        # TODO: don't catch blind exception - be specific
         except Exception:
+
             logger.exception('Cannot get user profile')
 
         return initial
@@ -37,12 +39,9 @@ class ChangeRequestFormView(FormView):
         zendesk_id = form.create_zendesk_ticket()
         zendesk_url = settings.ZENDESK_URL.format(zendesk_id)
 
-        jira_id = form.create_jira_issue('Zendesk ticket: {}'.format(zendesk_url))
-        jira_url = settings.JIRA_ISSUE_URL.format(jira_id)
-
         self.request._ticket_id = zendesk_id
 
-        slack_notify(f'new content request: {jira_url} // {zendesk_url}')
+        slack_notify(f'new content request: {zendesk_url}')
 
         return super().form_valid(form)
 
