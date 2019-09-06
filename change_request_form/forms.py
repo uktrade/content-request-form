@@ -48,28 +48,28 @@ ZENDESK_REASON_TO_TAG_MAP = {
 
 class ChangeRequestForm(GOVUKForm):
     name = forms.CharField(
-        label='Your full name',
+        label='Your full name *',
         max_length=255,
         widget=widgets.TextInput(),
         required=True,
     )
 
     department = forms.CharField(
-        label='Policy team and directorate',
+        label='Policy team and directorate *',
         max_length=255,
         widget=widgets.TextInput(),
         required=True,
     )
 
     approver = forms.CharField(
-        label='Who has approved this request?',
+        label='Who has approved this request? *',
         max_length=255,
         widget=widgets.TextInput(),
         required=True,
     )
 
     email = forms.EmailField(
-        label='Your email address',
+        label='Your email address *',
         widget=widgets.TextInput(),
         required=True,
     )
@@ -82,7 +82,7 @@ class ChangeRequestForm(GOVUKForm):
     )
 
     action = forms.ChoiceField(
-        label='What do you want to do?',
+        label='What do you want to do? *',
         choices=REASON_CHOICES,
         widget=widgets.RadioSelect(),
         required=True,
@@ -96,16 +96,16 @@ class ChangeRequestForm(GOVUKForm):
     )
 
     title_of_request = forms.CharField(
-        label='Title of request',
+        label='Title of request *',
         required=True,
         max_length=100,
         widget=widgets.TextInput(),
     )
 
     description = forms.CharField(
-        label='Summary of your request',
+        label='Summary of your request *',
         widget=widgets.Textarea(),
-        required=False,
+        required=True,
     )
 
     due_date = fields.SplitDateField(
@@ -113,13 +113,6 @@ class ChangeRequestForm(GOVUKForm):
         required=False,
         min_year=dt.date.today().year,
         max_year=dt.date.today().year + 1,
-    )
-
-    time_due= forms.CharField(
-        label='Is there a specific time that your content needs to go live?',
-        required=False,
-        max_length=100,
-        widget=widgets.TextInput(),
     )
 
     date_explanation = forms.CharField(
