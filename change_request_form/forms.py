@@ -10,8 +10,6 @@ from govuk_forms.forms import GOVUKForm
 from govuk_forms import widgets, fields
 import requests
 
-from .fields import AVFileField
-
 
 def slack_notify(message):
     slack_message = json.dumps(
@@ -30,6 +28,7 @@ REASON_CHOICES = (
     ('Update or remove content on GOV.UK', 'Update or remove content on GOV.UK'),
     ('Add new content to great.gov.uk', 'Add new content to great.gov.uk'),
     ('Update or remove content on great.gov.uk', 'Update or remove content on great.gov.uk'),
+    ('Ask a question', 'Ask a question'),
 )
 
 REASON_TO_SERVICE_MAP = {
@@ -56,30 +55,37 @@ class ChangeRequestForm(GOVUKForm):
     )
 
     department = forms.CharField(
-        label='Your directorate/section',
+        label='Policy team and directorate',
         max_length=255,
         widget=widgets.TextInput(),
-        help_text='Your content must have approval from your team leader before submitting for upload.',
+        required=True,
+    )
+
+    approver = forms.CharField(
+        label='Who has approved this request?',
+        max_length=255,
+        widget=widgets.TextInput(),
         required=True,
     )
 
     email = forms.EmailField(
         label='Your email address',
-        widget=widgets.TextInput()
+        widget=widgets.TextInput(),
+        required=True,
     )
 
     telephone = forms.CharField(
         label='Phone number',
         max_length=255,
         widget=widgets.TextInput(),
-        help_text='Please provide a direct number in case we need to discuss your request.'
+        required=False,
     )
 
     action = forms.ChoiceField(
-        label='Do you want to add, update or remove content?',
+        label='What do you want to do?',
         choices=REASON_CHOICES,
-        help_text='Please allow a minimum of 3 working days to allow for feedback, approval and upload.',
         widget=widgets.RadioSelect(),
+        required=True,
     )
 
     update_url = forms.URLField(
@@ -89,19 +95,22 @@ class ChangeRequestForm(GOVUKForm):
         required=False,
     )
 
-    description = forms.CharField(
-        label='What is your content request? Please give as much detail as possible.',
-        widget=widgets.Textarea(),
-        help_text='Please outline your request, intended audience and its purpose '
-                  '(for example, to sell, to inform, to explain). '
-                  'For updating/deleting existing content, please provide URL.',
+    title_of_request = forms.CharField(
+        label='Title of request',
         required=True,
+        max_length=100,
+        widget=widgets.TextInput(),
+    )
+
+    description = forms.CharField(
+        label='Summary of your request',
+        widget=widgets.Textarea(),
+        required=False,
     )
 
     due_date = fields.SplitDateField(
-        label='Do you have a publication deadline?',
-        help_text='If so, give date and reason.',
-        required=True,
+        label='Publication deadline (if applicable)',
+        required=False,
         min_year=dt.date.today().year,
         max_year=dt.date.today().year + 1,
     )
@@ -114,23 +123,9 @@ class ChangeRequestForm(GOVUKForm):
     )
 
     date_explanation = forms.CharField(
-        label='Reason',
+        label='Reason for deadline',
         widget=widgets.TextInput(),
         required=False
-    )
-
-    title_of_request = forms.CharField(
-        label='Title of request',
-        required=True,
-        max_length=100,
-        widget=widgets.TextInput(),
-    )
-
-    time_due= forms.CharField(
-        label='Is there a specific time that your content needs to go live?',
-        required=True,
-        max_length=100,
-        widget=widgets.TextInput(),
     )
 
     def clean_due_date(self):
