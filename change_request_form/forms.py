@@ -108,11 +108,11 @@ class ChangeRequestForm(GOVUKForm):
         required=True,
     )
 
-    due_date = fields.SplitDateField(
+    due_date = forms.CharField(
         label='Publication deadline (if applicable)',
         required=False,
-        min_year=dt.date.today().year,
-        max_year=dt.date.today().year + 1,
+        widget=widgets.TextInput(),
+        max_length=100,
     )
 
     date_explanation = forms.CharField(
