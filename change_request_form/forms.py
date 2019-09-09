@@ -10,8 +10,6 @@ from govuk_forms.forms import GOVUKForm
 from govuk_forms import widgets, fields
 import requests
 
-from .fields import AVFileField
-
 
 def slack_notify(message):
     slack_message = json.dumps(
@@ -30,8 +28,7 @@ REASON_CHOICES = (
     ('Update or remove content on GOV.UK', 'Update or remove content on GOV.UK'),
     ('Add new content to great.gov.uk', 'Add new content to great.gov.uk'),
     ('Update or remove content on great.gov.uk', 'Update or remove content on great.gov.uk'),
-    ('Add new content to Digital Workspace', 'Add new content to Digital Workspace'),
-    ('Update or remove content on Digital Workspace', 'Update or remove content on Digital Workspace'),
+    ('Ask a question', 'Ask a question'),
 )
 
 REASON_TO_SERVICE_MAP = {
@@ -39,8 +36,6 @@ REASON_TO_SERVICE_MAP = {
     'Update or remove content on GOV.UK': 'GOV.UK',
     'Add new content to great.gov.uk': 'great.gov.uk',
     'Update or remove content on great.gov.uk': 'great.gov.uk',
-    'Add new content to Digital Workspace': 'Digital Workspace',
-    'Update or remove content on Digital Workspace': 'Digital Workspace',
 }
 
 ZENDESK_REASON_TO_TAG_MAP = {
@@ -48,110 +43,81 @@ ZENDESK_REASON_TO_TAG_MAP = {
     'Update or remove content on GOV.UK': '_GOV.UK',
     'Add new content to great.gov.uk': '_great.gov.uk',
     'Update or remove content on great.gov.uk': '_great.gov.uk',
-    'Add new content to Digital Workspace': 'Digital Workspace',
-    'Update or remove content on Digital Workspace': 'Digital Workspace',
 }
 
 
 class ChangeRequestForm(GOVUKForm):
     name = forms.CharField(
-        label='Your full name',
+        label='Your full name *',
         max_length=255,
-        widget=widgets.TextInput()
+        widget=widgets.TextInput(),
+        required=True,
     )
 
     department = forms.CharField(
-        label='Your directorate/section',
+        label='Policy team and directorate *',
         max_length=255,
         widget=widgets.TextInput(),
-        help_text='Your content must have approval from your team leader before submitting for upload.'
+        required=True,
+    )
+
+    approver = forms.CharField(
+        label='Who has approved this request? *',
+        max_length=255,
+        widget=widgets.TextInput(),
+        required=True,
     )
 
     email = forms.EmailField(
-        label='Your email address',
-        widget=widgets.TextInput()
+        label='Your email address *',
+        widget=widgets.TextInput(),
+        required=True,
     )
 
     telephone = forms.CharField(
         label='Phone number',
         max_length=255,
         widget=widgets.TextInput(),
-        help_text='Please provide a direct number in case we need to discuss your request.'
+        required=False,
     )
 
     action = forms.ChoiceField(
-        label='Do you want to add, update or remove content?',
+        label='What do you want to do? *',
         choices=REASON_CHOICES,
-        help_text='Please allow a minimum of 3 working days to allow for feedback, approval and upload.',
         widget=widgets.RadioSelect(),
-    )
-
-    description = forms.CharField(
-        label='What is your content request? Please give as much detail as possible.',
-        widget=widgets.Textarea(),
-        help_text='Please outline your request, intended audience and its purpose '
-                  '(for example, to sell, to inform, to explain). '
-                  'For updating/deleting existing content, please provide URL.'
-    )
-
-    due_date = fields.SplitDateField(
-        label='Do you have a publication deadline?',
-        help_text='If so, give date and reason.',
         required=True,
-        min_year=dt.date.today().year,
-        max_year=dt.date.today().year + 1,
     )
 
-    time_due= forms.CharField(
-        label='Time due',
+    update_url = forms.URLField(
+        label='Provide the URL of the page to be updated', max_length=255,
+        widget=widgets.TextInput(),
+        help_text='Only required for content updates',
         required=False,
+    )
+
+    title_of_request = forms.CharField(
+        label='Title of request *',
+        required=True,
         max_length=100,
         widget=widgets.TextInput(),
     )
 
-    date_explanation = forms.CharField(
-        label='Reason',
+    description = forms.CharField(
+        label='Summary of your request *',
+        widget=widgets.Textarea(),
+        required=True,
+    )
+
+    due_date = forms.CharField(
+        label='Publication deadline (if applicable)',
+        required=False,
         widget=widgets.TextInput(),
-        required=False
+        max_length=100,
     )
 
-    attachment1 = AVFileField(
-        label='Please attach the files containing the content you want to be uploaded',
-        max_length=255,
-        widget=widgets.ClearableFileInput(),
-        help_text='We accept Word documents with tracked changes - providing this will make the process very quick.',
-        required=False
-    )
-
-    attachment2 = AVFileField(
-        label='',
-        max_length=255,
-        widget=widgets.ClearableFileInput(),
-        help_text='',
-        required=False
-    )
-
-    attachment3 = AVFileField(
-        label='',
-        max_length=255,
-        widget=widgets.ClearableFileInput(),
-        help_text='',
-        required=False
-    )
-
-    attachment4 = AVFileField(
-        label='',
-        max_length=255,
-        widget=widgets.ClearableFileInput(),
-        help_text='',
-        required=False
-    )
-
-    attachment5 = AVFileField(
-        label='',
-        max_length=255,
-        widget=widgets.ClearableFileInput(),
-        help_text='',
+    date_explanation = forms.CharField(
+        label='Reason for deadline',
+        widget=widgets.TextInput(),
         required=False
     )
 
@@ -160,6 +126,12 @@ class ChangeRequestForm(GOVUKForm):
         if date and date < dt.date.today():
             raise forms.ValidationError('The date cannot be in the past')
         return date
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        if 'Update' in cleaned_data['action'] and not cleaned_data['update_url']:
+            raise forms.ValidationError('Provide an update url')
 
     def formatted_text(self):
         return ('Name: {name}\n'
