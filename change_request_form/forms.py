@@ -10,6 +10,8 @@ from govuk_forms.forms import GOVUKForm
 from govuk_forms import widgets, fields
 import requests
 
+from .fields import AVFileField
+
 
 def slack_notify(message):
     slack_message = json.dumps(
@@ -23,53 +25,41 @@ def slack_notify(message):
     requests.post(settings.SLACK_URL, data=slack_message)
 
 
-REASON_CHOICES = (
-    ('Add new content to GOV.UK', 'Add new content to GOV.UK'),
-    ('Update or remove content on GOV.UK', 'Update or remove content on GOV.UK'),
-    ('Add new content to great.gov.uk', 'Add new content to great.gov.uk'),
-    ('Update or remove content on great.gov.uk', 'Update or remove content on great.gov.uk'),
-    ('Ask a question', 'Ask a question'),
+PLATFORM_CHOICES = (
+    ('gov.uk', 'gov.uk'),
+    ('great.gov.uk', 'great.gov.uk'),
+    ('workspace.trade.gov.uk', 'workspace.trade.gov.uk (intranet)'),
+    ('None', 'None'),
 )
 
-REASON_TO_SERVICE_MAP = {
-    'Add new content to GOV.UK': 'GOV.UK',
-    'Update or remove content on GOV.UK': 'GOV.UK',
-    'Add new content to great.gov.uk': 'great.gov.uk',
-    'Update or remove content on great.gov.uk': 'great.gov.uk',
-}
+REQUEST_TYPE_UPDATE_CHOICE = 'Update page(s)'
 
-ZENDESK_REASON_TO_TAG_MAP = {
-    'Add new content to GOV.UK': '_GOV.UK',
-    'Update or remove content on GOV.UK': '_GOV.UK',
-    'Add new content to great.gov.uk': '_great.gov.uk',
-    'Update or remove content on great.gov.uk': '_great.gov.uk',
-}
+REQUEST_TYPE_CHOICES = (
+    ('New page(s)', 'New page(s)'),
+    (REQUEST_TYPE_UPDATE_CHOICE, 'Update page(s)'),
+    ('Other', 'Other'),
+)
+
+
 
 
 class ChangeRequestForm(GOVUKForm):
     name = forms.CharField(
-        label='Your full name *',
+        label='Name *',
         max_length=255,
         widget=widgets.TextInput(),
         required=True,
     )
 
     department = forms.CharField(
-        label='Policy team and directorate *',
-        max_length=255,
-        widget=widgets.TextInput(),
-        required=True,
-    )
-
-    approver = forms.CharField(
-        label='Who has approved this request? *',
+        label='Policy team / business area *',
         max_length=255,
         widget=widgets.TextInput(),
         required=True,
     )
 
     email = forms.EmailField(
-        label='Your email address *',
+        label='Email address *',
         widget=widgets.TextInput(),
         required=True,
     )
@@ -81,42 +71,74 @@ class ChangeRequestForm(GOVUKForm):
         required=False,
     )
 
-    action = forms.ChoiceField(
-        label='What do you want to do? *',
-        choices=REASON_CHOICES,
-        widget=widgets.RadioSelect(),
-        required=True,
-    )
-
-    update_url = forms.URLField(
-        label='Provide the URL of the page to be updated', max_length=255,
-        widget=widgets.TextInput(),
-        help_text='Only required for content updates',
-        required=False,
-    )
-
     title_of_request = forms.CharField(
-        label='Title of request *',
+        label='Request title *',
         required=True,
         max_length=100,
         widget=widgets.TextInput(),
     )
 
-    description = forms.CharField(
+    platform = forms.ChoiceField(
+        label='What do you want to do? *',
+        choices=PLATFORM_CHOICES,
+        widget=widgets.RadioSelect(),
+        required=True,
+    )
+
+    request_type = forms.ChoiceField(
+        label='What type of request is it? *',
+        choices=REQUEST_TYPE_CHOICES,
+        widget=widgets.RadioSelect(),
+        required=True,
+    )
+
+    update_url = forms.CharField(
+        label='URL(s) of the page(s) to be updated',
+        widget=widgets.Textarea(),
+        required=False,
+    )
+
+    request_summary = forms.CharField(
         label='Summary of your request *',
         widget=widgets.Textarea(),
         required=True,
     )
 
-    due_date = forms.CharField(
-        label='Publication deadline (if applicable)',
-        required=False,
-        widget=widgets.TextInput(),
-        max_length=100,
+    attachment = AVFileField(
+        label='Upload an attachment if required',
+        help_text='For multiple files, please upload a .zip file',
+        max_length=255,
+        widget=widgets.ClearableFileInput(),
+        required=False
     )
 
-    date_explanation = forms.CharField(
-        label='Reason for deadline',
+    user_need = forms.CharField(
+        label='What user need does this meet? *',
+        widget=widgets.Textarea(),
+        required=True,
+    )
+
+    approver = forms.CharField(
+        label='Who has approved (or will sign off) this request? *',
+        widget=widgets.TextInput(),
+        required=True,
+    )
+
+    publication_date = fields.SplitDateField(
+        label='Publication deadline',
+        required=False,
+        min_year=dt.date.today().year,
+        max_year=dt.date.today().year + 1,
+    )
+
+    publication_date_not_required = forms.BooleanField(
+        label='No-date specified',
+        widget=widgets.CheckboxInput(),
+        required=False,
+    )
+
+    publication_date_explanation = forms.CharField(
+        label='Provide a reason for this date',
         widget=widgets.TextInput(),
         required=False
     )
@@ -130,7 +152,7 @@ class ChangeRequestForm(GOVUKForm):
     def clean(self):
         cleaned_data = super().clean()
 
-        if 'Update' in cleaned_data['action'] and not cleaned_data['update_url']:
+        if 'Update' in cleaned_data['request_type'] and not cleaned_data['update_url']:
             raise forms.ValidationError('Provide an update url')
 
     def formatted_text(self):
@@ -138,11 +160,16 @@ class ChangeRequestForm(GOVUKForm):
                 'Department: {department}\n'
                 'Email: {email}\n'
                 'Telephone: {telephone}\n'
-                'Action: {action}\n'
-                'Description: {description}\n'
-                'Due date: {due_date}\n'
-                'Time due: {time_due}\n'
-                'Due date explanation: {date_explanation}\n'.format(**self.cleaned_data))
+                'Title of request: {title_of_request}\n'
+                'platform: {olatform}\n',
+                'request type: {request_type}\n'
+                'Update urls: {update_url}\n'
+                'Request summary: {request_summary}\n'
+                'User need: {user_need}\n'
+                'Approver: {approver} \n'
+                'Publication date: {publication_date}\n'
+                'Publication date not required?: {publication_date_not_required}\n'
+                'publication date reason: {publication_date_explanation}\n'.format(**self.cleaned_data))
 
     def create_zendesk_ticket(self):
         zenpy_client = Zenpy(
@@ -151,25 +178,21 @@ class ChangeRequestForm(GOVUKForm):
             token=settings.ZENDESK_TOKEN,
         )
 
-        service = REASON_TO_SERVICE_MAP[self.cleaned_data['action']]
-
         custom_fields = [
-            CustomField(id=30041969, value=service),                                    # service
+            CustomField(id=30041969, value=self.cleaned_data['platform']),              # service
             CustomField(id=360000180437, value=self.cleaned_data['department']),        # directorate
             CustomField(id=45522485, value=self.cleaned_data['email']),                 # email
             CustomField(id=360000188178, value=self.cleaned_data['telephone']),         # Phone number
-            CustomField(id=360000182638, value=self.cleaned_data['action']),            # Content request
-            CustomField(id=360000180477, value=self.cleaned_data['date_explanation']),  # reason
-            CustomField(id=360000180457, value=str(self.cleaned_data['due_date']))      # due date
+            CustomField(id=360000182638, value=self.cleaned_data['request_type']),      # Content request
+            CustomField(id=360000180477, value=self.cleaned_data['publication_date_explanation']),  # reason
+            CustomField(id=360000180457, value=str(self.cleaned_data['publication_date']))      # due date
         ]
-
-        tag = ZENDESK_REASON_TO_TAG_MAP[self.cleaned_data['action']]
 
         ticket = zenpy_client.tickets.create(Ticket(
             subject='Content change request',
             description=self.formatted_text(),
             custom_fields=custom_fields,
-            tags=['content delivery', tag]
+            tags=['content delivery', self.cleaned_data['platform']]
         )).ticket
 
         attachments = [value for field, value in self.cleaned_data.items() if field.startswith('attachment') and value]
@@ -180,7 +203,7 @@ class ChangeRequestForm(GOVUKForm):
                 upload_instance = zenpy_client.attachments.upload(attachment.temporary_file_path())
                 uploads.append(upload_instance.token)
 
-            ticket.comment = Comment(body=str(attachment), uploads=uploads)
+            ticket.comment = Comment(body='attachments', uploads=uploads)
 
             zenpy_client.tickets.update(ticket)
 

@@ -1,5 +1,31 @@
 {% extends 'govuk_template.html' %}
 
+{% block body_end %}
+    {{ block.super }}
+<script type="text/javascript">
+    (function(){
+        const actions = document.getElementsByName('request_type');
+        const urls = document.getElementById('id_update_url-group');
+
+        function showHideUrlEntryField() {
+            var actionValue = null;
+            for(var i = 0; i < actions.length; i++){
+                  if(actions[i].checked)
+                      actionValue = actions[i].value;
+            }
+
+            urls.style.display = (actionValue == 'Update page(s)') ? '' : 'none';
+        }
+
+        for(var i = 0; i < actions.length; i++){
+            actions[i].onclick = showHideUrlEntryField;
+        }
+
+        showHideUrlEntryField();
+    })();
+</script>
+{% endblock %}
+
 {% block inner_content %}
 <h1 class="heading-large">Request a content update</h1>
 <p>All requests to upload new or change existing content must be raised through this form. Please provide one request at
