@@ -23,6 +23,27 @@
 
         showHideUrlEntryField();
     })();
+
+    (function(){
+        const actions = document.getElementsByName('platform');
+        const urls = document.getElementById('id_attachment-group');
+
+        function showHideFileUploadField() {
+            var actionValue = null;
+            for(var i = 0; i < actions.length; i++){
+                  if(actions[i].checked)
+                      actionValue = actions[i].value;
+            }
+
+            urls.style.display = (actionValue == 'digital_workspace') ? '' : 'none';
+        }
+
+        for(var i = 0; i < actions.length; i++){
+            actions[i].onclick = showHideFileUploadField;
+        }
+
+        showHideFileUploadField();
+    })();
 </script>
 {% endblock %}
 

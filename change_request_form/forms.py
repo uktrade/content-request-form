@@ -4,7 +4,7 @@ import datetime as dt
 from django import forms
 from django.conf import settings
 from zenpy import Zenpy
-from zenpy.lib.api_objects import Ticket, CustomField, Comment
+from zenpy.lib.api_objects import Ticket, CustomField, Comment, User
 
 from govuk_forms.forms import GOVUKForm
 from govuk_forms import widgets, fields
@@ -28,7 +28,7 @@ def slack_notify(message):
 PLATFORM_CHOICES = (
     ('gov.uk', 'gov.uk'),
     ('great.gov.uk', 'great.gov.uk'),
-    ('workspace.trade.gov.uk', 'workspace.trade.gov.uk (intranet)'),
+    ('digital_workspace', 'workspace.trade.gov.uk (intranet)'),
     ('None', 'None'),
 )
 
@@ -40,7 +40,12 @@ REQUEST_TYPE_CHOICES = (
     ('Other', 'Other'),
 )
 
-
+SERVICE_FIELD_MAPPING = {
+    'gov.uk': 'GOV.UK',
+    'great.gov.uk': 'Great',
+    'digital_workspace': 'Digital Workspace',
+    'None': 'None',
+}
 
 
 class ChangeRequestForm(GOVUKForm):
@@ -79,7 +84,7 @@ class ChangeRequestForm(GOVUKForm):
     )
 
     platform = forms.ChoiceField(
-        label='What do you want to do? *',
+        label='Which platform is the request for? *',
         choices=PLATFORM_CHOICES,
         widget=widgets.RadioSelect(),
         required=True,
@@ -156,44 +161,28 @@ class ChangeRequestForm(GOVUKForm):
             raise forms.ValidationError('Provide an update url')
 
     def formatted_text(self):
-        return ('Name: {name}\n'
-                'Department: {department}\n'
-                'Email: {email}\n'
-                'Telephone: {telephone}\n'
-                'Title of request: {title_of_request}\n'
-                'platform: {olatform}\n',
-                'request type: {request_type}\n'
-                'Update urls: {update_url}\n'
-                'Request summary: {request_summary}\n'
-                'User need: {user_need}\n'
-                'Approver: {approver} \n'
-                'Publication date: {publication_date}\n'
-                'Publication date not required?: {publication_date_not_required}\n'
-                'publication date reason: {publication_date_explanation}\n'.format(**self.cleaned_data))
+        return  """Name: {name}<br>
+                Department: {department}<br>
+                Email: {email}<br>
+                Telephone: {telephone}<br>
+                Title of request: {title_of_request}<br>
+                platform: {platform}<br>
+                request type: {request_type}<br>
+                Update urls: {update_url}<br>
+                Request summary: {request_summary}<br>
+                User need: {user_need}<br>
+                Approver: {approver}<br>
+                Publication date: {publication_date}<br>
+                Publication date not required?: {publication_date_not_required}<br>
+                publication date reason: {publication_date_explanation}""".format(**self.cleaned_data)
 
     def create_zendesk_ticket(self):
+
         zenpy_client = Zenpy(
             subdomain=settings.ZENDESK_SUBDOMAIN,
             email=settings.ZENDESK_EMAIL,
             token=settings.ZENDESK_TOKEN,
         )
-
-        custom_fields = [
-            CustomField(id=30041969, value=self.cleaned_data['platform']),              # service
-            CustomField(id=360000180437, value=self.cleaned_data['department']),        # directorate
-            CustomField(id=45522485, value=self.cleaned_data['email']),                 # email
-            CustomField(id=360000188178, value=self.cleaned_data['telephone']),         # Phone number
-            CustomField(id=360000182638, value=self.cleaned_data['request_type']),      # Content request
-            CustomField(id=360000180477, value=self.cleaned_data['publication_date_explanation']),  # reason
-            CustomField(id=360000180457, value=str(self.cleaned_data['publication_date']))      # due date
-        ]
-
-        ticket = zenpy_client.tickets.create(Ticket(
-            subject='Content change request',
-            description=self.formatted_text(),
-            custom_fields=custom_fields,
-            tags=['content delivery', self.cleaned_data['platform']]
-        )).ticket
 
         attachments = [value for field, value in self.cleaned_data.items() if field.startswith('attachment') and value]
 
@@ -202,9 +191,27 @@ class ChangeRequestForm(GOVUKForm):
             for attachment in attachments:
                 upload_instance = zenpy_client.attachments.upload(attachment.temporary_file_path())
                 uploads.append(upload_instance.token)
+        else:
+            uploads = None
 
-            ticket.comment = Comment(body='attachments', uploads=uploads)
+        service = SERVICE_FIELD_MAPPING[self.cleaned_data['platform']]
 
-            zenpy_client.tickets.update(ticket)
+        custom_fields = [
+            CustomField(id=30041969, value=service),                                                # service
+            CustomField(id=360000180437, value=self.cleaned_data['department']),                    # directorate
+            CustomField(id=45522485, value=self.cleaned_data['email']),                             # email
+            CustomField(id=360000188178, value=self.cleaned_data['telephone']),                     # Phone number
+            CustomField(id=360000182638, value=self.cleaned_data['request_type']),                  # Content request
+            CustomField(id=360000180477, value=self.cleaned_data['publication_date_explanation']),  # reason
+            CustomField(id=360000180457, value=str(self.cleaned_data['publication_date']))          # due date
+        ]
+
+        ticket = zenpy_client.tickets.create(Ticket(
+            subject='Content change request',
+            custom_fields=custom_fields,
+            tags=['content_delivery', self.cleaned_data['platform']],
+            comment=Comment(html_body=self.formatted_text(), uploads=uploads),
+            requester=User(name=self.cleaned_data['name'], email=self.cleaned_data['email'])
+        )).ticket
 
         return ticket.id
