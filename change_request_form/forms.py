@@ -207,7 +207,7 @@ class ChangeRequestForm(GOVUKForm):
         ]
 
         ticket = zenpy_client.tickets.create(Ticket(
-            subject='Content change request',
+            subject=self.cleaned_data['title_of_request'],
             custom_fields=custom_fields,
             tags=['content_delivery', self.cleaned_data['platform']],
             comment=Comment(html_body=self.formatted_text(), uploads=uploads),
