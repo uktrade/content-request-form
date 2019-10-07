@@ -1,13 +1,29 @@
 DEBUG=on
-SECRET_KEY=a-secret-key
-JIRA_URL=https://test.atlassian.net
-JIRA_USERNAME=a-jira-username
-JIRA_PASSWORD=a-jira-password
+SECRET_KEY=this_is_not_a_secret_key
+SENTRY_DSN=
+SLACK_URL="https://slack.example.com"
+JIRA_URL="https://test.atlassian.net"
+JIRA_USERNAME=jira_username
+JIRA_PASSWORD=jira_password
+JIRA_WORKSPACE_PROJECT_ID=222
+JIRA_ISSUE_URL="https:/test.atlassian.net"
+JIRA_WATCHERS=
 JIRA_PROJECT_ID=9999
-AV_URL=https://clamav-url/
-AV_USERNAME=clamav-username
-AV_PASSWORD=clamav-password
-AUTHBROKER_URL=https://authbroker/
-AUTHBROKER_CLIENT_ID=a-client-id
-AUTHBROKER_CLIENT_SECRET=a-secret-key
-AUTHBROKER_SCOPES='read write'
+AV_URL="https://clamav-url/"
+AV_USERNAME=clamav_username
+AV_PASSWORD=clamav_password
+
+AUTHBROKER_SCOPES="read write"
+
+AUTHBROKER_CLIENT_ID=
+AUTHBROKER_CLIENT_SECRET=
+AUTHBROKER_URL=
+
+
+ZENDESK_URL="https://test.example.com"
+ZENDESK_TOKEN=
+ZENDESK_SUBDOMAIN=test
+ZENDESK_EMAIL=zendesk@example.com
+
+# You may need to change this for your devenv
+# ALLOWED_HOSTS=localapps.com,localhost,127.0.0.1

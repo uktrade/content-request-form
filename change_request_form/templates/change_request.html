@@ -51,6 +51,10 @@
 <h1 class="heading-large">Request a content update</h1>
 <p>All requests to upload new or change existing content must be raised through this form. Please provide one request at
     a time and as much detail as you can.</p>
+
+
+
+
 <form method="post" action="{{ request.path }}" enctype="multipart/form-data">
 
     {% if form.non_field_errors %}
@@ -64,6 +68,16 @@
 
     {% csrf_token %}
     {{ form }}
+
+<div class="govuk-inset-text">
+<p>
+By submitting this form you&rsquo;re consenting to the use of any data contained within it. <br>
+Please do not submit any personal information that&rsquo;s not directly relevant to this request.
+</p>
+<p>
+By submitting this form you’re consenting to the use of any data contained within it. Please do not submit any personal information that’s not directly relevant to this request. For full information on how data is used and managed, please view our <a href="https://workspace.trade.gov.uk/working-at-dit/policies-and-guidance/privacy-policies/" target="_blank">privacy policy</a>.
+</div>
+
     <input type="submit" class="button" value="Submit request"/>
 </form>
 {% endblock %}
