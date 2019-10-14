@@ -64,6 +64,11 @@
 
     {% csrf_token %}
     {{ form }}
+<div class="govuk-inset-text">
+<p>
+By submitting this form you’re consenting to the use of any data contained within it. Please do not submit any personal information that’s not directly relevant to this request. For full information on how data is used and managed, please view our <a href="https://workspace.trade.gov.uk/working-at-dit/policies-and-guidance/privacy-policies/" target="_blank">privacy policy</a>.</p>
+</div>
+
     <input type="submit" class="button" value="Submit request"/>
 </form>
 {% endblock %}
