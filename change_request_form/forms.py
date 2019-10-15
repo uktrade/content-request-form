@@ -107,6 +107,9 @@ class ChangeRequestForm(GOVUKForm):
         label='Summary of your request *',
         widget=widgets.Textarea(),
         required=True,
+        help_text=\
+"""Please do not submit any personal information that’s not directly relevant to this request.
+Do not include personal or financial information, like your National Insurance number or credit card details."""
     )
 
     attachment = AVFileField(
