@@ -11,7 +11,7 @@ chardet==3.0.4            # via requests
 defusedxml==0.5.0         # via jira
 django-environ==0.4.5
 django-govuk-template==0.7
-django==2.2.4
+django==2.2.8
 future==0.16.0            # via zenpy
 idna==2.7                 # via requests
 jira==1.0.15
@@ -31,4 +31,4 @@ whitenoise==4.1.1
 zenpy==2.0.7
 
 # The following packages are considered to be unsafe in a requirements file:
-# setuptools==41.0.1        # via jira
+# setuptools
