@@ -5,13 +5,14 @@
 #    pip-compile --output-file=requirements-dev.txt requirements-dev.in
 #
 -e git+https://github.com/lgarvey/django-govuk-forms.git@master#egg=govuk_forms
+asgiref==3.2.3
 cachetools==2.1.0
 certifi==2018.4.16
 chardet==3.0.4
 defusedxml==0.5.0
 django-environ==0.4.5
 django-govuk-template==0.7
-django==2.2.4
+django==3.0
 future==0.16.0
 idna==2.7
 jira==1.0.15
@@ -32,4 +33,4 @@ whitenoise==4.1.1
 zenpy==2.0.7
 
 # The following packages are considered to be unsafe in a requirements file:
-# setuptools==41.0.1        # via jira
+# setuptools==42.0.2        # via jira
