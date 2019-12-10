@@ -5,14 +5,13 @@
 #    pip-compile
 #
 -e git+https://github.com/lgarvey/django-govuk-forms.git@master#egg=govuk_forms
-asgiref==3.2.3            # via django
 cachetools==2.1.0         # via zenpy
 certifi==2018.4.16        # via requests
 chardet==3.0.4            # via requests
 defusedxml==0.5.0         # via jira
 django-environ==0.4.5
 django-govuk-template==0.7
-django==3.0
+django==2.2.8
 future==0.16.0            # via zenpy
 idna==2.7                 # via requests
 jira==1.0.15
