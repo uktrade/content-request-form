@@ -157,26 +157,29 @@ class ChangeRequestForm(GOVUKForm):
     def clean(self):
         cleaned_data = super().clean()
 
-        if 'Update' in cleaned_data['request_type'] and not cleaned_data['update_url']:
+        if 'Update' in cleaned_data.get('request_type', '') and not cleaned_data.get('update_url', ''):
             raise forms.ValidationError('Provide an update url')
 
-    def formatted_text(self):
-        return  """Name: {name}<br>
-                Department: {department}<br>
-                Email: {email}<br>
-                Telephone: {telephone}<br>
-                Title of request: {title_of_request}<br>
-                platform: {platform}<br>
-                request type: {request_type}<br>
-                Update urls: {update_url}<br>
-                Request summary: {request_summary}<br>
-                User need: {user_need}<br>
-                Approver: {approver}<br>
-                Publication date: {publication_date}<br>
-                Publication date not required?: {publication_date_not_required}<br>
-                publication date reason: {publication_date_explanation}""".format(**self.cleaned_data)
+    def formatted_text(self, email_id):
+        return  """SSO unique id: {email_id}<br>
+Name: {name}<br>
+Department: {department}<br>
+Email: {email}<br>
+Telephone: {telephone}<br>
+Title of request: {title_of_request}<br>
+platform: {platform}<br>
+request type: {request_type}<br>
+Update urls: {update_url}<br>
+Request summary: {request_summary}<br>
+User need: {user_need}<br>
+Approver: {approver}<br>
+Publication date: {publication_date}<br>
+Publication date not required?: {publication_date_not_required}<br>
+publication date reason: {publication_date_explanation}""".format(
+            **{'email_id': email_id, **self.cleaned_data}
+        )
 
-    def create_zendesk_ticket(self):
+    def create_zendesk_ticket(self, sso_email_id):
 
         zenpy_client = Zenpy(
             subdomain=settings.ZENDESK_SUBDOMAIN,
@@ -206,11 +209,13 @@ class ChangeRequestForm(GOVUKForm):
             CustomField(id=360000180457, value=str(self.cleaned_data['publication_date']))          # due date
         ]
 
+        body = self.formatted_text(sso_email_id)
+
         ticket = zenpy_client.tickets.create(Ticket(
             subject=self.cleaned_data['title_of_request'],
             custom_fields=custom_fields,
             tags=['content_delivery', self.cleaned_data['platform']],
-            comment=Comment(html_body=self.formatted_text(), uploads=uploads),
+            comment=Comment(html_body=body, uploads=uploads),
             requester=User(name=self.cleaned_data['name'], email=self.cleaned_data['email'])
         )).ticket
 

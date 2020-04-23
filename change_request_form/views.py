@@ -18,15 +18,16 @@ class ChangeRequestFormView(FormView):
     template_name = 'change_request.html'
     form_class = ChangeRequestForm
     success_url = reverse_lazy('success')
+    profile = None
 
     def get_initial(self):
         initial = super().get_initial()
 
         try:
-            profile = get_profile(self.request)
+            self.profile = get_profile(self.request)
 
-            initial['email'] = profile['email']
-            initial['name'] = profile['first_name'] + ' ' + profile['last_name']
+            initial['email'] = self.profile['email']
+            initial['name'] = self.profile['first_name'] + ' ' + self.profile['last_name']
         # TODO: don't catch blind exception - be specific
         except Exception:
 
@@ -36,7 +37,7 @@ class ChangeRequestFormView(FormView):
 
     def form_valid(self, form):
 
-        zendesk_id = form.create_zendesk_ticket()
+        zendesk_id = form.create_zendesk_ticket(self.profile['email_user_id'])
         zendesk_url = settings.ZENDESK_URL.format(zendesk_id)
 
         self.request._ticket_id = zendesk_id
