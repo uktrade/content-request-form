@@ -148,8 +148,8 @@ class ChangeRequestForm(GOVUKForm):
         required=False
     )
 
-    def clean_due_date(self):
-        date = self.cleaned_data['due_date']
+    def clean_publication_date(self):
+        date = self.cleaned_data['publication_date']
         if date and date < dt.date.today():
             raise forms.ValidationError('The date cannot be in the past')
         return date

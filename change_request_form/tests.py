@@ -6,7 +6,7 @@ from django.conf import settings
 
 from parameterized import parameterized
 
-from .forms import ChangeRequestForm, REASON_CHOICES
+from .forms import ChangeRequestForm, REQUEST_TYPE_CHOICES, PLATFORM_CHOICES
 
 
 class BaseTestCase(TestCase):
@@ -17,29 +17,40 @@ class BaseTestCase(TestCase):
             'department': 'test dept',
             'email': 'test@test.com',
             'telephone': '07700 TEST',
-            'action': 'Add new content to Gov.uk',
-            'description': 'a description',
-            'due_date_0': dt.date.today().day,
-            'due_date_1': dt.date.today().month,
-            'due_date_2': dt.date.today().year,
-            'date_explanation': 'ministerial visit',
-            'time_due': 'time due',
+            'title_of_request': 'title of request',
+            'platform': PLATFORM_CHOICES[0][0],
+            'request_type': REQUEST_TYPE_CHOICES[0][0],
+            'update_url': 'http;//google.com',
+            'request_summary': 'a summary of the request',
+            'user_need': 'user need',
+            'approver': 'the approver',
+            'publication_date_not_required': True,
+            'publication_date_0': dt.date.today().day,
+            'publication_date_1': dt.date.today().month,
+            'publication_date_2': dt.date.today().year,
+            'publication_date_explanation': 'ministerial visit',
         }
 
         test_data = self.test_post_data.copy()
 
-        test_data['due_date'] = dt.date.today()
+        test_data['publication_date'] = dt.date.today()
 
-        self.test_formatted_text = (
-            'Name: {name}\n'
-            'Department: {department}\n'
-            'Email: {email}\n'
-            'Telephone: {telephone}\n'
-            'Action: {action}\n'
-            'Description: {description}\n'
-            'Due date: {due_date}\n'
-            'Time due: {time_due}\n'
-            'Due date explanation: {date_explanation}').format(**test_data)
+        self.test_formatted_text = """SSO unique id: sso_email_id<br>
+Name: {name}<br>
+Department: {department}<br>
+Email: {email}<br>
+Telephone: {telephone}<br>
+Title of request: {title_of_request}<br>
+platform: {platform}<br>
+request type: {request_type}<br>
+Update urls: {update_url}<br>
+Request summary: {request_summary}<br>
+User need: {user_need}<br>
+Approver: {approver}<br>
+Publication date: {publication_date}<br>
+Publication date not required?: {publication_date_not_required}<br>
+publication date reason: {publication_date_explanation}""".format(**test_data)
+
 
 
 class ChangeRequestFormTestCase(BaseTestCase):
@@ -49,24 +60,29 @@ class ChangeRequestFormTestCase(BaseTestCase):
         self.assertTrue(form.is_valid())
 
     def test_date_in_future(self):
+
+        previous_date = dt.date.today() - dt.timedelta(days=7)
         post_data = {
-            'due_date_0': dt.date.today().day - 1,
-            'due_date_1': dt.date.today().month,
-            'due_date_2': dt.date.today().year,
+            'publication_date_0': previous_date.day,
+            'publication_date_1': previous_date.month,
+            'publication_date_2': previous_date.year,
         }
 
         form = ChangeRequestForm(post_data)
 
         self.assertFalse(form.is_valid())
-        self.assertIn('due_date', form.errors)
-        self.assertEqual(form.errors['due_date'], ['The date cannot be in the past'])
+
+        self.assertIn('publication_date', form.errors)
+        self.assertEqual(form.errors['publication_date'], ['The date cannot be in the past'])
 
     def test_formatted_text(self):
         form = ChangeRequestForm(self.test_post_data)
         form.is_valid()
+        print(form.formatted_text('sso_email_id'))
+        print(self.test_formatted_text)
 
         self.assertEqual(
-            form.formatted_text(),
+            form.formatted_text('sso_email_id'),
             self.test_formatted_text)
 
     def test_due_date_is_optional(self):
@@ -84,33 +100,6 @@ class ChangeRequestFormTestCase(BaseTestCase):
 
         self.assertTrue(form.is_valid())
 
-    @parameterized.expand((action_id,) for action_id, _ in REASON_CHOICES)
-    @patch('change_request_form.forms.create_jira_issue')
-    @patch('change_request_form.forms.slack_notify')
-    def test_jira_project_id(self, action_id, mock_slack_notify, mock_create_jira_issue):
-
-        mock_create_jira_issue.return_value = 'FAKE-JIRA-ID'
-
-        assert settings.JIRA_CONTENT_PROJECT_ID != settings.JIRA_WORKSPACE_PROJECT_ID
-
-        workspace_actions = [
-            'Add new content to Digital Workspace',
-            'Update or remove content on Digital Workspace'
-        ]
-
-        post_data = self.test_post_data.copy()
-        post_data['action'] = action_id
-
-        form = ChangeRequestForm(post_data)
-        self.assertTrue(form.is_valid())
-
-        form.create_jira_issue()
-
-        project_id = settings.JIRA_WORKSPACE_PROJECT_ID if action_id in workspace_actions \
-            else settings.JIRA_CONTENT_PROJECT_ID
-
-        self.assertEquals(mock_create_jira_issue.call_args[0][0], project_id)
-
 
 class ChangeRequestFormViewTestCase(BaseTestCase):
     def setUp(self):
@@ -126,29 +115,17 @@ class ChangeRequestFormViewTestCase(BaseTestCase):
 
     @patch('change_request_form.views.get_profile')
     @patch('authbroker_client.client.has_valid_token')
-    @patch('change_request_form.forms.create_jira_issue')
-    @patch('change_request_form.forms.slack_notify')
-    @override_settings(JIRA_ISSUE_URL='http://jira_url/?selectedIssue={}')
-    def test_successful_submission(self, mock_slack_notify, mock_create_jira_issue, mock_has_valid_token, mock_get_profile):
+    @patch('change_request_form.views.slack_notify')
+    @patch('change_request_form.forms.Zenpy')
+    def test_successful_submission(self, mock_zenpy, mock_slack_notify, mock_has_valid_token, mock_get_profile):
         mock_has_valid_token.return_value = True
-        mock_create_jira_issue.return_value = 'FAKE-JIRA-ID'
+
+        mock_zenpy.return_value.tickets.create.return_value.ticket.id = 12345
 
         response = self.client.post('/', self.test_post_data)
 
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '/success/?issue=FAKE-JIRA-ID')
+        self.assertEqual(response.url, '/success/?issue=12345')
         self.assertTrue(mock_slack_notify.called)
         mock_slack_notify.call_args.assert_called_with(
-            'new content request:http://jira_url/?selectedIssue=FAKE-JIRA-ID')
-
-        submitted_date = '{}-{}-{}'.format(
-            str(self.test_post_data['due_date_2']),
-            str(self.test_post_data['due_date_1']).zfill(2),
-            str(self.test_post_data['due_date_0']).zfill(2),
-        )
-
-        self.assertTrue(mock_create_jira_issue.called)
-        mock_create_jira_issue.assert_called_with(
-            settings.JIRA_CONTENT_PROJECT_ID, self.test_formatted_text, [], submitted_date,
-            customfield_11224='test dept', customfield_11225='test@test.com', customfield_11227='Mr Smith',
-            customfield_11228={'value': 'Add new content to Gov.uk'})
+            'new content request:http://jira_url/?selectedIssue=12345')
