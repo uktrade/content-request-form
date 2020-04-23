@@ -206,8 +206,12 @@ publication date reason: {publication_date_explanation}""".format(
             CustomField(id=360000188178, value=self.cleaned_data['telephone']),                     # Phone number
             CustomField(id=360000182638, value=self.cleaned_data['request_type']),                  # Content request
             CustomField(id=360000180477, value=self.cleaned_data['publication_date_explanation']),  # reason
-            CustomField(id=360000180457, value=str(self.cleaned_data['publication_date']))          # due date
         ]
+
+        if not self.cleaned_data['publication_date_not_required']:
+            custom_fields.append(
+                CustomField(id=360000180457, value=str(self.cleaned_data['publication_date']))  # due date)
+            )
 
         body = self.formatted_text(sso_email_id)
 
