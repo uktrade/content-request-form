@@ -5,31 +5,98 @@
 #    pip-compile --output-file=requirements-dev.txt requirements-dev.in
 #
 -e git+https://github.com/lgarvey/django-govuk-forms.git@master#egg=govuk_forms
-cachetools==2.1.0         # via -r requirements.txt, zenpy
-certifi==2018.4.16        # via -r requirements.txt, requests
-chardet==3.0.4            # via -r requirements.txt, requests
-defusedxml==0.5.0         # via -r requirements.txt, jira
-django-environ==0.4.5     # via -r requirements.txt
-django-govuk-template==0.7  # via -r requirements.txt
-django==2.2.13            # via -r requirements.txt, django-govuk-forms, django-govuk-template
-future==0.16.0            # via -r requirements.txt, zenpy
-idna==2.7                 # via -r requirements.txt, requests
-jira==1.0.15              # via -r requirements.txt
-libsass==0.14.5           # via -r requirements.txt
-oauthlib==2.1.0           # via -r requirements.txt, requests-oauthlib
-parameterized==0.6.1      # via -r requirements-dev.in
-pbr==4.1.0                # via -r requirements.txt, jira
-python-dateutil==2.7.3    # via -r requirements.txt, zenpy
-pytz==2018.5              # via -r requirements.txt, django, zenpy
-raven==6.9.0              # via -r requirements.txt
-requests-oauthlib==1.0.0  # via -r requirements.txt, jira
-requests-toolbelt==0.8.0  # via -r requirements.txt, jira
-requests==2.22.0          # via -r requirements.txt, jira, requests-oauthlib, requests-toolbelt, zenpy
-six==1.11.0               # via -r requirements.txt, jira, libsass, python-dateutil
-sqlparse==0.3.0           # via -r requirements.txt, django
-urllib3==1.25.3           # via -r requirements.txt, requests
-whitenoise==4.1.1         # via -r requirements.txt
-zenpy==2.0.7              # via -r requirements.txt
+    # via -r requirements.txt
+cachetools==2.1.0
+    # via
+    #   -r requirements.txt
+    #   zenpy
+certifi==2018.4.16
+    # via
+    #   -r requirements.txt
+    #   requests
+chardet==3.0.4
+    # via
+    #   -r requirements.txt
+    #   requests
+defusedxml==0.5.0
+    # via
+    #   -r requirements.txt
+    #   jira
+django-environ==0.4.5
+    # via -r requirements.txt
+django-govuk-template==0.7
+    # via -r requirements.txt
+django==2.2.18
+    # via
+    #   -r requirements.txt
+    #   django-govuk-forms
+    #   django-govuk-template
+future==0.16.0
+    # via
+    #   -r requirements.txt
+    #   zenpy
+idna==2.7
+    # via
+    #   -r requirements.txt
+    #   requests
+jira==1.0.15
+    # via -r requirements.txt
+libsass==0.14.5
+    # via -r requirements.txt
+oauthlib==2.1.0
+    # via
+    #   -r requirements.txt
+    #   requests-oauthlib
+parameterized==0.6.1
+    # via -r requirements-dev.in
+pbr==4.1.0
+    # via
+    #   -r requirements.txt
+    #   jira
+python-dateutil==2.7.3
+    # via
+    #   -r requirements.txt
+    #   zenpy
+pytz==2018.5
+    # via
+    #   -r requirements.txt
+    #   django
+    #   zenpy
+raven==6.9.0
+    # via -r requirements.txt
+requests-oauthlib==1.0.0
+    # via
+    #   -r requirements.txt
+    #   jira
+requests-toolbelt==0.8.0
+    # via
+    #   -r requirements.txt
+    #   jira
+requests==2.22.0
+    # via
+    #   -r requirements.txt
+    #   jira
+    #   requests-oauthlib
+    #   requests-toolbelt
+    #   zenpy
+six==1.11.0
+    # via
+    #   -r requirements.txt
+    #   jira
+    #   libsass
+    #   python-dateutil
+sqlparse==0.3.0
+    # via
+    #   -r requirements.txt
+    #   django
+urllib3==1.25.3
+    # via
+    #   -r requirements.txt
+    #   requests
+whitenoise==4.1.1
+    # via -r requirements.txt
+zenpy==2.0.7
+    # via -r requirements.txt
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
